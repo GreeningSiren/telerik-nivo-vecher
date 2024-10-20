@@ -9,10 +9,22 @@ function KeyUp(key) {
 function MouseUp() {
 }
 function findTarget(towerIndex) {
-    return 0;
+    if(towerShootMode[towerIndex] == "mostHealth") {
+        let maxHealth = 0;
+        let maxHealthIndex = -1;
+        for(let i = 0; i < enemyC; i++) {
+            if(enemyHealth[i] > maxHealth && areCirclesColliding(enemyX[i], enemyY[i], enemySize[i], towerX[towerIndex], towerY[towerIndex], towerRange[towerIndex])) {
+                maxHealth = enemyHealth[i];
+                maxHealthIndex = i;
+            }
+        }
+        return maxHealthIndex;
+    }
 }
 function shootAtEnemy(towerIndex, enemyIndex) {
-    spawnBullet(mouseX, mouseY, -1, 0);
+    let posokaX = (enemyX[enemyIndex] - towerX[towerIndex])/100;
+    let posokaY = (enemyY[enemyIndex] - towerY[towerIndex])/100;
+    spawnBullet(towerX[towerIndex], towerY[towerIndex], posokaX, posokaY);
 }
 function removeBullet(bulletIndex) {
     let lastBulletI = bulletC - 1;
@@ -34,6 +46,12 @@ function removeEnemy(enemyIndex) {
 function onCollideEnemyWithBullet(enemyIndex, bulletIndex) {
 
 }
-function distance() {
+function distance(x1,y1,x2,y2) {
+    let a = x1-x2, b = y1-y2;
+    return Math.sqrt(a*a+b*b);
+}
 
+function areCirclesColliding(x1, y1, r1, x2, y2, r2) {
+   let dx = x2 - x1, dy = y2 - y1;
+   return Math.sqrt(dy * dy + dx * dx) < r1 + r2;
 }
