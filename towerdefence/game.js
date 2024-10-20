@@ -31,7 +31,11 @@ function findTarget(towerIndex) {
             }
             return minHealthIndex;
         case "firstEnemy":
-            return 0;
+            for (let i = 0; i < enemyC; i++) {
+                if (areCirclesColliding(enemyX[i], enemyY[i], enemySize[i], towerX[towerIndex], towerY[towerIndex], towerRange[towerIndex])) {
+                    return i;
+                }
+            }
         case "closestEnemy":
             let minDistance = Infinity;
             let minDistanceIndex = -1;
