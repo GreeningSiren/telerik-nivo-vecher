@@ -9,44 +9,45 @@ function KeyUp(key) {
 function MouseUp() {
 }
 function findTarget(towerIndex) {
-    if(towerShootMode[towerIndex] == "mostHealth") {
-        let maxHealth = 0;
-        let maxHealthIndex = -1;
-        for(let i = 0; i < enemyC; i++) {
-            if(enemyHealth[i] > maxHealth && areCirclesColliding(enemyX[i], enemyY[i], enemySize[i], towerX[towerIndex], towerY[towerIndex], towerRange[towerIndex])) {
-                maxHealth = enemyHealth[i];
-                maxHealthIndex = i;
+    switch (towerShootMode[towerIndex]) {
+        case "mostHealth":
+            let maxHealth = 0;
+            let maxHealthIndex = -1;
+            for (let i = 0; i < enemyC; i++) {
+                if (enemyHealth[i] > maxHealth && areCirclesColliding(enemyX[i], enemyY[i], enemySize[i], towerX[towerIndex], towerY[towerIndex], towerRange[towerIndex])) {
+                    maxHealth = enemyHealth[i];
+                    maxHealthIndex = i;
+                }
             }
-        }
-        return maxHealthIndex;
-    }else if(towerShootMode[towerIndex] == "leastHealth") {
-        let minHealth = Infinity;
-        let minHealthIndex = -1;
-        for(let i = 0; i < enemyC; i++) {
-            if(enemyHealth[i] < minHealth && areCirclesColliding(enemyX[i], enemyY[i], enemySize[i], towerX[towerIndex], towerY[towerIndex], towerRange[towerIndex])) {
-                minHealth = enemyHealth[i];
-                minHealthIndex = i;
+            return maxHealthIndex;
+        case "leastHealth":
+            let minHealth = Infinity;
+            let minHealthIndex = -1;
+            for (let i = 0; i < enemyC; i++) {
+                if (enemyHealth[i] < minHealth && areCirclesColliding(enemyX[i], enemyY[i], enemySize[i], towerX[towerIndex], towerY[towerIndex], towerRange[towerIndex])) {
+                    minHealth = enemyHealth[i];
+                    minHealthIndex = i;
+                }
             }
-        }
-        return minHealthIndex;
-    }else if(towerShootMode[towerIndex] == "firstEnemy") {
-        return 0;
-    }else if(towerShootMode[towerIndex] == "closestEnemy") {
-        let minDistance = Infinity;
-        let minDistanceIndex = -1;
-        for(let i = 0; i < enemyC; i++) {
-            let distance = getDistance(towerX[towerIndex], towerY[towerIndex], enemyX[i], enemyY[i]);
-            if(distance < minDistance && areCirclesColliding(enemyX[i], enemyY[i], enemySize[i], towerX[towerIndex], towerY[towerIndex], towerRange[towerIndex])) {
-                minDistance = distance;
-                minDistanceIndex = i;
+            return minHealthIndex;
+        case "firstEnemy":
+            return 0;
+        case "closestEnemy":
+            let minDistance = Infinity;
+            let minDistanceIndex = -1;
+            for (let i = 0; i < enemyC; i++) {
+                let distance = getDistance(towerX[towerIndex], towerY[towerIndex], enemyX[i], enemyY[i]);
+                if (distance < minDistance && areCirclesColliding(enemyX[i], enemyY[i], enemySize[i], towerX[towerIndex], towerY[towerIndex], towerRange[towerIndex])) {
+                    minDistance = distance;
+                    minDistanceIndex = i;
+                }
             }
-        }
-        return minDistanceIndex;
+            return minDistanceIndex;
     }
 }
 function shootAtEnemy(towerIndex, enemyIndex) {
-    let posokaX = (enemyX[enemyIndex] - towerX[towerIndex])/100;
-    let posokaY = (enemyY[enemyIndex] - towerY[towerIndex])/100;
+    let posokaX = (enemyX[enemyIndex] - towerX[towerIndex]) / 100;
+    let posokaY = (enemyY[enemyIndex] - towerY[towerIndex]) / 100;
     spawnBullet(towerX[towerIndex], towerY[towerIndex], posokaX, posokaY);
 }
 function removeBullet(bulletIndex) {
@@ -69,12 +70,12 @@ function removeEnemy(enemyIndex) {
 function onCollideEnemyWithBullet(enemyIndex, bulletIndex) {
 
 }
-function getDistance(x1,y1,x2,y2) {
-    let a = x1-x2, b = y1-y2;
-    return Math.sqrt(a*a+b*b);
+function getDistance(x1, y1, x2, y2) {
+    let a = x1 - x2, b = y1 - y2;
+    return Math.sqrt(a * a + b * b);
 }
 
 function areCirclesColliding(x1, y1, r1, x2, y2, r2) {
-   let dx = x2 - x1, dy = y2 - y1;
-   return Math.sqrt(dy * dy + dx * dx) < r1 + r2;
+    let dx = x2 - x1, dy = y2 - y1;
+    return Math.sqrt(dy * dy + dx * dx) < r1 + r2;
 }
