@@ -19,6 +19,29 @@ function findTarget(towerIndex) {
             }
         }
         return maxHealthIndex;
+    }else if(towerShootMode[towerIndex] == "leastHealth") {
+        let minHealth = Infinity;
+        let minHealthIndex = -1;
+        for(let i = 0; i < enemyC; i++) {
+            if(enemyHealth[i] < minHealth && areCirclesColliding(enemyX[i], enemyY[i], enemySize[i], towerX[towerIndex], towerY[towerIndex], towerRange[towerIndex])) {
+                minHealth = enemyHealth[i];
+                minHealthIndex = i;
+            }
+        }
+        return minHealthIndex;
+    }else if(towerShootMode[towerIndex] == "firstEnemy") {
+        return 0;
+    }else if(towerShootMode[towerIndex] == "closestEnemy") {
+        let minDistance = Infinity;
+        let minDistanceIndex = -1;
+        for(let i = 0; i < enemyC; i++) {
+            let distance = getDistance(towerX[towerIndex], towerY[towerIndex], enemyX[i], enemyY[i]);
+            if(distance < minDistance && areCirclesColliding(enemyX[i], enemyY[i], enemySize[i], towerX[towerIndex], towerY[towerIndex], towerRange[towerIndex])) {
+                minDistance = distance;
+                minDistanceIndex = i;
+            }
+        }
+        return minDistanceIndex;
     }
 }
 function shootAtEnemy(towerIndex, enemyIndex) {
@@ -46,7 +69,7 @@ function removeEnemy(enemyIndex) {
 function onCollideEnemyWithBullet(enemyIndex, bulletIndex) {
 
 }
-function distance(x1,y1,x2,y2) {
+function getDistance(x1,y1,x2,y2) {
     let a = x1-x2, b = y1-y2;
     return Math.sqrt(a*a+b*b);
 }
