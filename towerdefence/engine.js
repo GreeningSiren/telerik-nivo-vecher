@@ -23,7 +23,7 @@ let lives = 10;
 var money = 0;
 
 function init() {
-    towerX = []; towerY = []; towerCooldown = []; towerTimer = []; towerHealth = []; towerShootMode = []; towerRange = []; towerC = 0;
+    towerX = []; towerY = []; towerCooldown = []; towerTimer = []; towerHealth = []; towerShootMode = []; towerRange = []; towerC = 0, towerLastShot = [];
     enemyX = []; enemyY = []; enemySize = []; enemyHealth = []; enemySpeed = []; enemyC = 0;
     bulletX = []; bulletY = []; bulletDX = []; bulletDY = []; bulletC = 0;
     enemyImage = tryToLoad("enemy", "red");
