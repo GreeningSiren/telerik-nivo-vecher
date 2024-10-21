@@ -10,7 +10,7 @@ function MouseUp() {
 }
 function findTarget(towerIndex) {
     switch (towerShootMode[towerIndex]) {
-        case "mostHealth":
+        case "mostHealth": {
             let maxHealth = 0;
             let maxHealthIndex = -1;
             for (let i = 0; i < enemyC; i++) {
@@ -21,7 +21,8 @@ function findTarget(towerIndex) {
             }
             towerLastShot[towerIndex] = maxHealthIndex;
             return maxHealthIndex;
-        case "leastHealth":
+        }
+        case "leastHealth": {
             let minHealth = Infinity;
             let minHealthIndex = -1;
             for (let i = 0; i < enemyC; i++) {
@@ -32,14 +33,16 @@ function findTarget(towerIndex) {
             }
             towerLastShot[towerIndex] = minHealthIndex;
             return minHealthIndex;
-        case "firstEnemy":
+        }
+        case "firstEnemy": {
             for (let i = 0; i < enemyC; i++) {
                 if (areCirclesColliding(enemyX[i], enemyY[i], enemySize[i], towerX[towerIndex], towerY[towerIndex], towerRange[towerIndex]) && towerLastShot[towerIndex] != i) {
                     towerLastShot[towerIndex] = i;
                     return i;
                 }
             }
-        case "closestEnemy":
+        }
+        case "closestEnemy": {
             let minDistance = Infinity;
             let minDistanceIndex = -1;
             for (let i = 0; i < enemyC; i++) {
@@ -51,6 +54,7 @@ function findTarget(towerIndex) {
             }
             towerLastShot[towerIndex] = minDistanceIndex;
             return minDistanceIndex;
+        }
     }
 }
 function shootAtEnemy(towerIndex, enemyIndex) {
