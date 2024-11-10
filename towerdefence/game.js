@@ -9,13 +9,13 @@ function KeyUp(key) {
 function MouseUp() {
 }
 function findTarget(towerIndex) {
-    switch (towerShootMode[towerIndex]) {
+    switch (towers[towerIndex].shootingMode) {
         case "mostHealth": {
             let maxHealth = 0;
             let maxHealthIndex = -1;
             for (let i = 0; i < enemyC; i++) {
-                if (enemyHealth[i] > maxHealth && areCirclesColliding(enemyX[i], enemyY[i], enemySize[i], towerX[towerIndex], towerY[towerIndex], towerRange[towerIndex]) && towerLastShot[towerIndex] != i) {
-                    maxHealth = enemyHealth[i];
+                if (enemies[i].health > maxHealth && areCirclesColliding(enemies[i].x, enemies[i].y, enemies[i].size, towers[towerIndex].x, towers[towerIndex].y, towers[towerIndex].range) && towerLastShot[towerIndex] != i) {
+                    maxHealth = enemies[i].health;
                     maxHealthIndex = i;
                 }
             }
@@ -26,8 +26,8 @@ function findTarget(towerIndex) {
             let minHealth = Infinity;
             let minHealthIndex = -1;
             for (let i = 0; i < enemyC; i++) {
-                if (enemyHealth[i] < minHealth && areCirclesColliding(enemyX[i], enemyY[i], enemySize[i], towerX[towerIndex], towerY[towerIndex], towerRange[towerIndex]) && towerLastShot[towerIndex] != i) {
-                    minHealth = enemyHealth[i];
+                if (enemies[i].health < minHealth && areCirclesColliding(enemies[i].x, enemies[i].y, enemies[i].size, towers[towerIndex].x, towers[towerIndex].y, towers[towerIndex].range) && towerLastShot[towerIndex] != i) {
+                    minHealth = enemies[i].health;
                     minHealthIndex = i;
                 }
             }
@@ -36,7 +36,7 @@ function findTarget(towerIndex) {
         }
         case "firstEnemy": {
             for (let i = 0; i < enemyC; i++) {
-                if (areCirclesColliding(enemyX[i], enemyY[i], enemySize[i], towerX[towerIndex], towerY[towerIndex], towerRange[towerIndex]) && towerLastShot[towerIndex] != i) {
+                if (areCirclesColliding(enemies[i].x, enemies[i].y, enemies[i].size, towers[towerIndex].x, towers[towerIndex].y, towers[towerIndex].range) && towerLastShot[towerIndex] != i) {
                     towerLastShot[towerIndex] = i;
                     return i;
                 }
@@ -46,8 +46,8 @@ function findTarget(towerIndex) {
             let minDistance = Infinity;
             let minDistanceIndex = -1;
             for (let i = 0; i < enemyC; i++) {
-                let distance = getDistance(towerX[towerIndex], towerY[towerIndex], enemyX[i], enemyY[i]);
-                if (distance < minDistance && areCirclesColliding(enemyX[i], enemyY[i], enemySize[i], towerX[towerIndex], towerY[towerIndex], towerRange[towerIndex]) && towerLastShot[towerIndex] != i) {
+                let distance = getDistance(towers[towerIndex].x, towers[towerIndex].y, enemies[i].x, enemies[i].y);
+                if (distance < minDistance && areCirclesColliding(enemies[i].x, enemies[i].y, enemies[i].size, towers[towerIndex].x, towers[towerIndex].y, towers[towerIndex].range) && towerLastShot[towerIndex] != i) {
                     minDistance = distance;
                     minDistanceIndex = i;
                 }
@@ -58,26 +58,29 @@ function findTarget(towerIndex) {
     }
 }
 function shootAtEnemy(towerIndex, enemyIndex) {
-    let posokaX = (enemyX[enemyIndex] - towerX[towerIndex]) / 100;
-    let posokaY = (enemyY[enemyIndex] - towerY[towerIndex]) / 100;
-    spawnBullet(towerX[towerIndex], towerY[towerIndex], posokaX, posokaY);
+    let posokaX = (enemies[enemyIndex].x - towers[towerIndex].x) / 100;
+    let posokaY = (enemies[enemyIndex].y - towers[towerIndex].y) / 100;
+    spawnBullet(towers[towerIndex].x, towers[towerIndex].y, posokaX, posokaY);
 }
 function removeBullet(bulletIndex) {
     let lastBulletI = bulletC - 1;
-    bulletX[bulletIndex] = bulletX[lastBulletI];
-    bulletY[bulletIndex] = bulletY[lastBulletI];
-    bulletDX[bulletIndex] = bulletDX[lastBulletI];
-    bulletDY[bulletIndex] = bulletDY[lastBulletI];
+    bullets[bulletIndex].x = bullets[lastBulletI].x;
+    bullets[bulletIndex].y = bullets[lastBulletI].y;
+    bullets[bulletIndex].dX = bullets[lastBulletI].dX;
+    bullets[bulletIndex].dY = bullets[lastBulletI].dY;
     bulletC--;
+    bullets.pop();
+
 }
 function removeEnemy(enemyIndex) {
     let lastEnemyI = enemyC - 1;
-    enemyX[enemyIndex] = enemyX[lastEnemyI];
-    enemyY[enemyIndex] = enemyY[lastEnemyI];
-    enemySize[enemyIndex] = enemySize[lastEnemyI];
-    enemyHealth[enemyIndex] = enemyHealth[lastEnemyI];
-    enemySpeed[enemyIndex] = enemySpeed[lastEnemyI];
+    enemies[enemyIndex].x = enemies[lastEnemyI].x;
+    enemies[enemyIndex].y = enemies[lastEnemyI].y;
+    enemies[enemyIndex].size = enemies[lastEnemyI].size;
+    enemies[enemyIndex].health = enemies[lastEnemyI].health;
+    enemies[enemyIndex].speed = enemies[lastEnemyI].speed;
     enemyC--;
+    enemies.pop();
 }
 function onCollideEnemyWithBullet(enemyIndex, bulletIndex) {
 

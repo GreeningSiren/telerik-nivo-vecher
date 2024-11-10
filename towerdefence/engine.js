@@ -3,13 +3,21 @@ let particleSystem = {};
 // Game
 let isGameStarted = false;
 // Towers
-let towerX, towerY, towerCooldown, towerTimer, towerHealth, towerShootMode, towerRange, towerC;
+// let towerX, towerY, towerCooldown, towerTimer, towerHealth, towerShootMode, towerRange, towerC;
+let towerC = 0;
+let towerLastShot;
+// let towerCooldown = 10;
+let towers = [];
 
 // Enemies
-let enemyX, enemyY, enemySize, enemyHealth, enemyC;
+// let enemyX, enemyY, enemySize, enemyHealth, enemyC;
+let enemyC = 0;
+let enemies = [];
 
 // Bullets
-let bulletX, bulletY, bulletDX, bulletDY, bulletC;
+// let bulletX, bulletY, bulletDX, bulletDY, bulletC;
+let bulletC = 0;
+let bullets = [];
 
 // Images
 let enemyImage, bulletImage, towerImage, backImage;
@@ -23,9 +31,10 @@ let lives = 10;
 var money = 0;
 
 function init() {
-    towerX = []; towerY = []; towerCooldown = []; towerTimer = []; towerHealth = []; towerShootMode = []; towerRange = []; towerC = 0, towerLastShot = [];
-    enemyX = []; enemyY = []; enemySize = []; enemyHealth = []; enemySpeed = []; enemyC = 0;
-    bulletX = []; bulletY = []; bulletDX = []; bulletDY = []; bulletC = 0;
+    // towerX = []; towerY = []; towerCooldown = []; towerTimer = []; towerHealth = []; towerShootMode = []; towerRange = []; towerC = 0, towerLastShot = []
+    towerLastShot = []
+    // enemyX = []; enemyY = []; enemySize = []; enemyHealth = []; enemySpeed = []; enemyC = 0;
+    // bulletX = []; bulletY = []; bulletDX = []; bulletDY = []; bulletC = 0;
     enemyImage = tryToLoad("enemy", "red");
     bulletImage = tryToLoad("bullet", "black");
     towerImage = tryToLoad("tower", "brown");
@@ -59,28 +68,53 @@ function init() {
 }
 
 function spawnEnemy(x, y, size, health, speed) {
-    enemyX[enemyC] = x;
-    enemyY[enemyC] = y;
-    enemySize[enemyC] = size;
-    enemyHealth[enemyC] = health;
-    enemySpeed[enemyC] = speed;
+    // enemyX[enemyC] = x;
+    // enemyY[enemyC] = y;
+    // enemySize[enemyC] = size;
+    // enemyHealth[enemyC] = health;
+    // enemySpeed[enemyC] = speed;
+    
+    enemies.push({
+        x: x,
+        y: y,
+        size: size,
+        health: health,
+        speed: speed
+    })
     enemyC++;
 }
 function spawnTower(x, y, cooldown, health, shootingMode, range) {
-    towerX[towerC] = x;
-    towerY[towerC] = y;
-    towerCooldown[towerC] = cooldown;
-    towerTimer[towerC] = 0;
-    towerHealth[towerC] = health;
-    towerShootMode[towerC] = shootingMode;
-    towerRange[towerC] = range;
+    // towerX[towerC] = x;
+    // towerY[towerC] = y;
+    // towerCooldown[towerC] = cooldown;
+    // towerTimer[towerC] = 0;
+    // towerHealth[towerC] = health;
+    // towerShootMode[towerC] = shootingMode;
+    // towerRange[towerC] = range;
+    
+    towers.push({
+        x: x,
+        y: y,
+        cooldown: cooldown,
+        health: health,
+        shootingMode: shootingMode,
+        range: range,
+        timer: 0
+    })
     towerC++;
 }
 function spawnBullet(x, y, dX, dY) {
-    bulletX[bulletC] = x;
-    bulletY[bulletC] = y;
-    bulletDX[bulletC] = dX;
-    bulletDY[bulletC] = dY;
+    // bulletX[bulletC] = x;
+    // bulletY[bulletC] = y;
+    // bulletDX[bulletC] = dX;
+    // bulletDY[bulletC] = dY;
+    
+    bullets.push({
+        x: x,
+        y: y,
+        dX: dX,
+        dY: dY
+    })
     bulletC++;
 }
 function spawnWave1(numEnemies, x, enemiesSize, enemiesHealth, enemySpeed) {
@@ -113,31 +147,31 @@ function spawnBossWave(x) {
 function controlTower(key) {
     let towerIndex = -1;
     for (let i = 0; i < towerC; i++) {
-        if (areColliding(towerX[i], towerY[i], towerSize, towerSize, mouseX, mouseY, 1, 1)) {
+        if (areColliding(towers[i].x, towers[i].y, towerSize, towerSize, mouseX, mouseY, 1, 1)) {
             towerIndex = i;
         }
     }
     if (towerIndex >= 0) {
         if (isKeyPressed[65]) {
-            towerCooldown[towerIndex] -= 1;
+            towers[towerIndex].cooldown -= 1;
         }
 
         if (isKeyPressed[68]) {
-            towerCooldown[towerIndex] += 1;
+            towers[towerIndex].cooldown += 1;
         }
 
         // 'Q' key for decreasing towerRange (Q/E range)
         if (isKeyPressed[81]) {
-            towerRange[towerIndex] -= 1;
+            towers[towerIndex].range -= 1;
         }
 
         // 'E' key for increasing towerRange (Q/E range)
         if (isKeyPressed[69]) {
-            towerRange[towerIndex] += 1;
+            towers[towerIndex].range += 1;
         }
         // SPACE
         if (key == 32) {
-            let modeNow = towerShootMode[towerIndex], newMode;
+            let modeNow = towers[towerIndex].shootingMode, newMode;
             if (modeNow == "mostHealth") {
                 newMode = "leastHealth";
             } else if (modeNow == "leastHealth") {
@@ -147,7 +181,7 @@ function controlTower(key) {
             } else {
                 newMode = "mostHealth";
             }
-            towerShootMode[towerIndex] = newMode
+            towers[towerIndex].shootingMode = newMode
         }
     }
 }
@@ -159,10 +193,10 @@ function update() {
     }
     // Move bullets
     for (let i = 0; i < bulletC; i++) {
-        bulletX[i] += bulletDX[i];
-        bulletY[i] += bulletDY[i];
+        bullets[i].x += bullets[i].dX;
+        bullets[i].y += bullets[i].dY;
         // Remove bullets outside of screen
-        if (bulletX[i] < 0) {
+        if (bullets[i].x < 0) {
             removeBullet(i);
             break;
         }
@@ -170,14 +204,14 @@ function update() {
 
     // Move enemies 
     for (let i = 0; i < enemyC; i++) {
-        enemyX[i] += enemySpeed[i];
+        enemies[i].x += enemies[i].speed;
     }
 
     // Towers cooldown and shooting
     for (let i = 0; i < towerC; i++) {
-        towerTimer[i]++;
-        if (towerCooldown[i] <= towerTimer[i]) {
-            towerTimer[i] = 0;
+        towers[i].timer++;
+        if (towers[i].cooldown <= towers[i].timer) {
+            towers[i].timer = 0;
             // Find enemy for tower
             let enemyIndex = findTarget(i);
 
@@ -190,13 +224,13 @@ function update() {
         // Collision between towers and enemies
         for (let j = 0; j < enemyC; j++) {
 
-            if (areColliding(towerX[i], towerY[i], towerSize, towerSize, enemyX[j], enemyY[j], enemySize[j], enemySize[j])) {
+            if (areColliding(towers[i].x, towers[i].y, towerSize, towerSize, enemies[j].x, enemies[j].y, enemies[j].size, enemies[j].size)) {
                 lives -= 1;
                 removeEnemy(j);
-                particleSystem.makeExplosion(towerX[i], towerY[i], 100);
-                particleSystem.makeExplosion(towerX[i] - 50, towerY[i], 100);
-                particleSystem.makeExplosion(towerX[i] - 30, towerY[i] + 30, 100);
-                particleSystem.makeExplosion(towerX[i] + 30, towerY[i] + 30, 100);
+                particleSystem.makeExplosion(towers[i].x, towers[i].y, 100);
+                particleSystem.makeExplosion(towers[i].x - 50, towers[i].y, 100);
+                particleSystem.makeExplosion(towers[i].x - 30, towers[i].y + 30, 100);
+                particleSystem.makeExplosion(towers[i].x + 30, towers[i].y + 30, 100);
                 break;
             }
         }
@@ -205,8 +239,8 @@ function update() {
     // Collision between enemy and bullet
     for (let i = 0; i < enemyC; i++) {
         for (let j = 0; j < bulletC; j++) {
-            if (areColliding(enemyX[i], enemyY[i], enemySize[i], enemySize[i], bulletX[j], bulletY[j], bulletSize, bulletSize)) {
-                enemyHealth[i] -= 1;
+            if (areColliding(enemies[i].x, enemies[i].y, enemies[i].size, enemies[i].size, bullets[j].x, bullets[j].y, bulletSize, bulletSize)) {
+                enemies[i].health -= 1;
                 removeBullet(j);
 
                 onCollideEnemyWithBullet(i, j);
@@ -216,7 +250,7 @@ function update() {
     }
     // Delete bullets that are out of bounds
     for (let i = 0; i < bulletC; i++) {
-        if (!areColliding(bulletX[i], bulletY[i], bulletSize, bulletSize, 0, 0, 800, 600)) {
+        if (!areColliding(bullets[i].x, bullets[i].y, bulletSize, bulletSize, 0, 0, 800, 600)) {
             removeBullet(i);
             break;
         }
@@ -224,11 +258,11 @@ function update() {
 
     // Delete enemies with no health or out of bounds
     for (let i = 0; i < enemyC; i++) {
-        if (enemyHealth[i] <= 0) {
+        if (enemies[i].health <= 0) {
             money++;
         }
-        if (enemyHealth[i] <= 0 || enemyX[i] > 800) {
-            particleSystem.makeExplosion(enemyX[i] + enemySize[i] / 2, enemyY[i] + enemySize[i] / 2, 100);
+        if (enemies[i].health <= 0 || enemies[i].x > 800) {
+            particleSystem.makeExplosion(enemies[i].x + enemies[i].size / 2, enemies[i].y + enemies[i].size / 2, 100);
             removeEnemy(i);
             break;
         }
@@ -248,21 +282,21 @@ function draw() {
 
         // Draw enemies
         for (let i = 0; i < enemyC; i++) {
-            drawImage(enemyImage, enemyX[i], enemyY[i], enemySize[i], enemySize[i]);
+            drawImage(enemyImage, enemies[i].x, enemies[i].y+15, enemies[i].size, enemies[i].size);
 
             // Enemy health bar 
-            let w = enemyHealth[i] * 10;
+            let w = enemies[i].health * 10;
             let h = 10;
             context.fillStyle = "black";
-            context.fillRect(enemyX[i] - w / 2 + enemySize[i] / 2 - h / 6, enemyY[i] - h / 6 - h / 6, w + h / 3, h + h / 3);
+            context.fillRect(enemies[i].x - w / 2 + enemies[i].size / 2 - h / 6, enemies[i].y - h / 6 - h / 6, w + h / 3, h + h / 3);
             context.fillStyle = "red";
-            context.fillRect(enemyX[i] - w / 2 + enemySize[i] / 2, enemyY[i] - h / 6, w, h);
+            context.fillRect(enemies[i].x - w / 2 + enemies[i].size / 2, enemies[i].y - h / 6, w, h);
         }
         // Draw bullets
         for (let i = 0; i < bulletC; i++) {
             context.save();
-            context.translate(bulletX[i], bulletY[i]);
-            context.rotate(Math.atan2(bulletDY[i], bulletDX[i]) + Math.PI);
+            context.translate(bullets[i].x, bullets[i].y);
+            context.rotate(Math.atan2(bullets[i].dY, bullets[i].dX) + Math.PI);
             drawImage(bulletImage, -bulletSize / 2, -bulletSize / 2, bulletSize, bulletSize);
             context.restore();
         }
@@ -290,13 +324,13 @@ function draw() {
     }
     // Draw towers
     for (let i = 0; i < towerC; i++) {
-        drawImage(towerImage, towerX[i], towerY[i], towerSize, towerSize);
+        drawImage(towerImage, towers[i].x, towers[i].y, towerSize, towerSize);
         // Selected tower highlight
-        if (areColliding(towerX[i], towerY[i], towerSize, towerSize, mouseX, mouseY, 1, 1)) {
+        if (areColliding(towers[i].x, towers[i].y, towerSize, towerSize, mouseX, mouseY, 1, 1)) {
             context.globalAlpha = 0.3;
             context.strokeStyle = "black";
             context.beginPath();
-            context.arc(towerX[i], towerY[i], towerRange[i], 0, 2 * Math.PI);
+            context.arc(towers[i].x, towers[i].y, towers[i].range, 0, 2 * Math.PI);
             context.stroke();
             context.globalAlpha = 1;
 
@@ -306,11 +340,11 @@ function draw() {
             context.fillStyle = "black"
             context.strokeRect(menuX, menuY, 500, 150);
             context.font = "30px Courier New";
-            context.fillText("A/D Speed: " + towerCooldown[i], menuX, menuY);
-            context.fillText("Cooldown: " + towerTimer[i], menuX, menuY + 30);
-            context.fillText("Q/E Range:" + towerRange[i], menuX, menuY + 60);
-            context.fillText("SPACE Mode: " + towerShootMode[i], menuX, menuY + 90);
-            context.fillText("Health: " + towerHealth[i], menuX, menuY + 120);
+            context.fillText("A/D Speed: " + towers[i].cooldown, menuX, menuY);
+            context.fillText("Cooldown: " + towers[i].timer, menuX, menuY + 30);
+            context.fillText("Q/E Range:" + towers[i].range, menuX, menuY + 60);
+            context.fillText("SPACE Mode: " + towers[i].shootingMode, menuX, menuY + 90);
+            context.fillText("Health: " + towers[i].health, menuX, menuY + 120);
         }
     }
     if (level > levelC) {
