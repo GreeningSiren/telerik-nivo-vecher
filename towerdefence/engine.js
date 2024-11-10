@@ -2,20 +2,16 @@ var MouseUp, KeyUp, Update, Draw, Init, findTarget, shootAtEnemy, removeEnemy, r
 let particleSystem = {};
 // Game
 let isGameStarted = false;
+
 // Towers
-// let towerX, towerY, towerCooldown, towerTimer, towerHealth, towerShootMode, towerRange, towerC;
 let towerC = 0;
-let towerLastShot;
-// let towerCooldown = 10;
 let towers = [];
 
 // Enemies
-// let enemyX, enemyY, enemySize, enemyHealth, enemyC;
 let enemyC = 0;
 let enemies = [];
 
 // Bullets
-// let bulletX, bulletY, bulletDX, bulletDY, bulletC;
 let bulletC = 0;
 let bullets = [];
 
@@ -31,10 +27,6 @@ let lives = 10;
 var money = 0;
 
 function init() {
-    // towerX = []; towerY = []; towerCooldown = []; towerTimer = []; towerHealth = []; towerShootMode = []; towerRange = []; towerC = 0, towerLastShot = []
-    towerLastShot = []
-    // enemyX = []; enemyY = []; enemySize = []; enemyHealth = []; enemySpeed = []; enemyC = 0;
-    // bulletX = []; bulletY = []; bulletDX = []; bulletDY = []; bulletC = 0;
     enemyImage = tryToLoad("enemy", "red");
     bulletImage = tryToLoad("bullet", "black");
     towerImage = tryToLoad("tower", "brown");
@@ -68,12 +60,6 @@ function init() {
 }
 
 function spawnEnemy(x, y, size, health, speed) {
-    // enemyX[enemyC] = x;
-    // enemyY[enemyC] = y;
-    // enemySize[enemyC] = size;
-    // enemyHealth[enemyC] = health;
-    // enemySpeed[enemyC] = speed;
-    
     enemies.push({
         x: x,
         y: y,
@@ -84,14 +70,6 @@ function spawnEnemy(x, y, size, health, speed) {
     enemyC++;
 }
 function spawnTower(x, y, cooldown, health, shootingMode, range) {
-    // towerX[towerC] = x;
-    // towerY[towerC] = y;
-    // towerCooldown[towerC] = cooldown;
-    // towerTimer[towerC] = 0;
-    // towerHealth[towerC] = health;
-    // towerShootMode[towerC] = shootingMode;
-    // towerRange[towerC] = range;
-    
     towers.push({
         x: x,
         y: y,
@@ -99,16 +77,12 @@ function spawnTower(x, y, cooldown, health, shootingMode, range) {
         health: health,
         shootingMode: shootingMode,
         range: range,
-        timer: 0
+        timer: 0,
+        lastShot: -1
     })
     towerC++;
 }
 function spawnBullet(x, y, dX, dY) {
-    // bulletX[bulletC] = x;
-    // bulletY[bulletC] = y;
-    // bulletDX[bulletC] = dX;
-    // bulletDY[bulletC] = dY;
-    
     bullets.push({
         x: x,
         y: y,
