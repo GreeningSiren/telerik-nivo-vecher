@@ -4,15 +4,12 @@ let particleSystem = {};
 let isGameStarted = false;
 
 // Towers
-let towerC = 0;
 let towers = [];
 
 // Enemies
-let enemyC = 0;
 let enemies = [];
 
 // Bullets
-let bulletC = 0;
 let bullets = [];
 
 // Images
@@ -67,7 +64,6 @@ function spawnEnemy(x, y, size, health, speed) {
         health: health,
         speed: speed
     })
-    enemyC++;
 }
 function spawnTower(x, y, cooldown, health, shootingMode, range) {
     towers.push({
@@ -80,7 +76,6 @@ function spawnTower(x, y, cooldown, health, shootingMode, range) {
         timer: 0,
         lastShot: -1
     })
-    towerC++;
 }
 function spawnBullet(x, y, dX, dY) {
     bullets.push({
@@ -89,7 +84,6 @@ function spawnBullet(x, y, dX, dY) {
         dX: dX,
         dY: dY
     })
-    bulletC++;
 }
 function spawnWave1(numEnemies, x, enemiesSize, enemiesHealth, enemySpeed) {
     // Task idea
@@ -120,7 +114,7 @@ function spawnBossWave(x) {
 
 function controlTower(key) {
     let towerIndex = -1;
-    for (let i = 0; i < towerC; i++) {
+    for (let i = 0; i < towers.length; i++) {
         if (areColliding(towers[i].x, towers[i].y, towerSize, towerSize, mouseX, mouseY, 1, 1)) {
             towerIndex = i;
         }
@@ -166,7 +160,7 @@ function update() {
         return;
     }
     // Move bullets
-    for (let i = 0; i < bulletC; i++) {
+    for (let i = 0; i < bullets.length; i++) {
         bullets[i].x += bullets[i].dX;
         bullets[i].y += bullets[i].dY;
         // Remove bullets outside of screen
@@ -177,12 +171,12 @@ function update() {
     }
 
     // Move enemies 
-    for (let i = 0; i < enemyC; i++) {
+    for (let i = 0; i < enemies.length; i++) {
         enemies[i].x += enemies[i].speed;
     }
 
     // Towers cooldown and shooting
-    for (let i = 0; i < towerC; i++) {
+    for (let i = 0; i < towers.length; i++) {
         towers[i].timer++;
         if (towers[i].cooldown <= towers[i].timer) {
             towers[i].timer = 0;
@@ -196,7 +190,7 @@ function update() {
         }
 
         // Collision between towers and enemies
-        for (let j = 0; j < enemyC; j++) {
+        for (let j = 0; j < enemies.length; j++) {
 
             if (areColliding(towers[i].x, towers[i].y, towerSize, towerSize, enemies[j].x, enemies[j].y, enemies[j].size, enemies[j].size)) {
                 lives -= 1;
@@ -211,8 +205,8 @@ function update() {
     }
 
     // Collision between enemy and bullet
-    for (let i = 0; i < enemyC; i++) {
-        for (let j = 0; j < bulletC; j++) {
+    for (let i = 0; i < enemies.length; i++) {
+        for (let j = 0; j < bullets.length; j++) {
             if (areColliding(enemies[i].x, enemies[i].y, enemies[i].size, enemies[i].size, bullets[j].x, bullets[j].y, bulletSize, bulletSize)) {
                 enemies[i].health -= 1;
                 removeBullet(j);
@@ -223,7 +217,7 @@ function update() {
         }
     }
     // Delete bullets that are out of bounds
-    for (let i = 0; i < bulletC; i++) {
+    for (let i = 0; i < bullets.length; i++) {
         if (!areColliding(bullets[i].x, bullets[i].y, bulletSize, bulletSize, 0, 0, 800, 600)) {
             removeBullet(i);
             break;
@@ -231,7 +225,7 @@ function update() {
     }
 
     // Delete enemies with no health or out of bounds
-    for (let i = 0; i < enemyC; i++) {
+    for (let i = 0; i < enemies.length; i++) {
         if (enemies[i].health <= 0) {
             money++;
         }
@@ -255,7 +249,7 @@ function draw() {
         context.fillText("Lives: " + lives, 0, 50);
 
         // Draw enemies
-        for (let i = 0; i < enemyC; i++) {
+        for (let i = 0; i < enemies.length; i++) {
             drawImage(enemyImage, enemies[i].x, enemies[i].y+15, enemies[i].size, enemies[i].size);
 
             // Enemy health bar 
@@ -267,7 +261,7 @@ function draw() {
             context.fillRect(enemies[i].x - w / 2 + enemies[i].size / 2, enemies[i].y - h / 6, w, h);
         }
         // Draw bullets
-        for (let i = 0; i < bulletC; i++) {
+        for (let i = 0; i < bullets.length; i++) {
             context.save();
             context.translate(bullets[i].x, bullets[i].y);
             context.rotate(Math.atan2(bullets[i].dY, bullets[i].dX) + Math.PI);
@@ -277,7 +271,7 @@ function draw() {
 
 
         // Draw congratulations at end of level
-        if (enemyC == 0) {
+        if (enemies.length == 0) {
             context.font = "30px Courier New";
             context.fillText("Congratulations!", 0, 100);
 
@@ -297,7 +291,7 @@ function draw() {
         context.fillText("Click to play", 200, 300);
     }
     // Draw towers
-    for (let i = 0; i < towerC; i++) {
+    for (let i = 0; i < towers.length; i++) {
         drawImage(towerImage, towers[i].x, towers[i].y, towerSize, towerSize);
         // Selected tower highlight
         if (areColliding(towers[i].x, towers[i].y, towerSize, towerSize, mouseX, mouseY, 1, 1)) {
