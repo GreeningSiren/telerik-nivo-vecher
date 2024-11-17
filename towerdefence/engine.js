@@ -250,7 +250,7 @@ function draw() {
 
         // Draw enemies
         for (let i = 0; i < enemies.length; i++) {
-            drawImage(enemyImage, enemies[i].x, enemies[i].y+15, enemies[i].size, enemies[i].size);
+            drawImage(enemyImage, enemies[i].x, enemies[i].y, enemies[i].size, enemies[i].size);
 
             // Enemy health bar 
             let w = enemies[i].health * 10;
