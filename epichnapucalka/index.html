@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<!-- code.zip 2020 -->
+<html>
+
+<head>
+    <style>
+        body,
+        canvas {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+
+    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
+    <meta charset="UTF-8">
+    </meta> <!-- allows for cyrillic and other exotic text in console.logs -->
+</head>
+
+<body onload="onBodyLoad()">
+    <canvas id="canvas-id" width="800" height="600">
+        <script>
+            // How often will the update function from game.js be executed
+            let updateTime;
+
+            // Create global variables
+            let mouseX, mouseY, key_left, key_up, key_right, key_down, key_a, key_z, isKeyPressed;
+
+            // More global variables
+            let canvas, context;
+
+            // Fullscreen flag
+            let endlessCanvas = false;
+
+            // Access to functions, created in game.js
+            var update, draw, mouseup, mousemove, mousedown, keyup, keydown, init;
+                        
+            const reqAnimationFrame = window.requestAnimationFrame || window.mozRequestAnimationFrame || window.webkitRequestAnimationFrame || window.msRequestAnimationFrame || function(callback) {
+                setTimeout(callback, 1000 / 30);
+            };
+
+
+            // Custom image class - sets imgObj.img.src after imgObj.draw() has been called
+            class MyImage {
+                constructor(src_, backupColor_) {
+                    this.src = src_;
+                    this.backupColor = backupColor_;
+
+                    // Create image object with no source path
+                    this.img = new Image();
+                    this.canDraw = false;
+                    this.drawBackup = false;
+
+                    this.img.onload = ()=>{
+                        this.canDraw = true;
+                    }
+                    this.img.onerror = ()=>{
+                        this.canDraw = false;
+                        this.drawBackup = true;
+                        throw "Unable to load image " + this.src;
+                    }
+                    
+                }
+                draw(x,y,xs,ys) {
+                    if(xs == undefined) {
+                        xs = this.img.width | 100;
+                        ys = this.img.height | 100;
+                    }
+                    // If img.src is undefined - set it
+                    if(!this.img.src) {
+                        // Load image
+                        this.img.src = this.src;
+                    } else if(this.canDraw) {
+                        try {
+                            context.drawImage(this.img, x, y, xs, ys);
+                        } catch(e) {
+                            this.canDraw = false;
+                            this.drawBackup = true;
+                            throw e;
+                        }
+                    } else if(this.drawBackup) {
+                        context.fillStyle = this.backupColor;
+                        context.fillRect(x, y, xs, ys);
+                    }
+                }
+            }
+
+            // Attach image objects to global scope
+            (function preloadImages() {
+                // Load all images from ./images folder "BY HAND"
+                const imageObjectList = [{imageName:'arrowDown',backupColor:'black'}, {imageName:'arrowDownLeft',backupColor:'black'}, {imageName:'arrowDownRight',backupColor:'black'}, {imageName:'arrowLeft',backupColor:'black'}, {imageName:'arrowRight',backupColor:'black'}, {imageName:'arrowUp',backupColor:'black'}, {imageName:'arrowUpLeft',backupColor:'black'}, {imageName:'arrowUpRight',backupColor:'black'}, {imageName:'back3D',backupColor:'blue'}, {imageName:'backAlien',backupColor:'blue'}, {imageName:'backBeach',backupColor:'yellow'}, {imageName:'backCactus',backupColor:'yellow'}, {imageName:'backCake',backupColor:'pink'}, {imageName:'backClouds',backupColor:'blue'}, {imageName:'backDesert',backupColor:'orange'}, {imageName:'backForest',backupColor:'green'}, {imageName:'backGrass',backupColor:'green'}, {imageName:'backHills',backupColor:'orange'}, {imageName:'backIndustry',backupColor:'green'}, {imageName:'backMarket',backupColor:'yellow'}, {imageName:'backMountain',backupColor:'green'}, {imageName:'backMushrooms',backupColor:'orange'}, {imageName:'backNight',backupColor:'blue'}, {imageName:'backSea',backupColor:'blue'}, {imageName:'backSpikes',backupColor:'orange'}, {imageName:'backStars',backupColor:'black'}, {imageName:'backSun',backupColor:'purple'}, {imageName:'backSunset',backupColor:'orange'}, {imageName:'backTower',backupColor:'blue'}, {imageName:'backTrees',backupColor:'blue'}, {imageName:'backWaterfall',backupColor:'blue'}, {imageName:'backWaves',backupColor:'blue'}, {imageName:'ballOrTarget',backupColor:'blue'}, {imageName:'ballOrTree',backupColor:'green'}, {imageName:'barrelGreen',backupColor:'green'}, {imageName:'barrelGrey',backupColor:'gray'}, {imageName:'barrelRed',backupColor:'red'}, {imageName:'bee',backupColor:'gray'}, {imageName:'bird',backupColor:'brown'}, {imageName:'bomb',backupColor:'gray'}, {imageName:'box',backupColor:'brown'}, {imageName:'boxAlienGreenSuit',backupColor:'green'}, {imageName:'boxAlienYellowSquare',backupColor:'yellow'}, {imageName:'boxAlienYellowSuit',backupColor:'yellow'}, {imageName:'boxItem',backupColor:'brown'}, {imageName:'boxItemBoxed',backupColor:'black'}, {imageName:'boxItemDisabled',backupColor:'gray'}, {imageName:'boxItemDisabledBoxed',backupColor:'gray'}, {imageName:'buildingTile[0]',backupColor:'gray'}, {imageName:'buildingTile[10]',backupColor:'gray'}, {imageName:'buildingTile[11]',backupColor:'gray'}, {imageName:'buildingTile[12]',backupColor:'gray'}, {imageName:'buildingTile[13]',backupColor:'gray'}, {imageName:'buildingTile[14]',backupColor:'gray'}, {imageName:'buildingTile[15]',backupColor:'gray'}, {imageName:'buildingTile[16]',backupColor:'gray'}, {imageName:'buildingTile[17]',backupColor:'gray'}, {imageName:'buildingTile[18]',backupColor:'gray'}, {imageName:'buildingTile[19]',backupColor:'gray'}, {imageName:'buildingTile[1]',backupColor:'gray'}, {imageName:'buildingTile[20]',backupColor:'gray'}, {imageName:'buildingTile[21]',backupColor:'gray'}, {imageName:'buildingTile[22]',backupColor:'gray'}, {imageName:'buildingTile[23]',backupColor:'gray'}, {imageName:'buildingTile[24]',backupColor:'gray'}, {imageName:'buildingTile[25]',backupColor:'gray'}, {imageName:'buildingTile[26]',backupColor:'gray'}, {imageName:'buildingTile[27]',backupColor:'gray'}, {imageName:'buildingTile[28]',backupColor:'gray'}, {imageName:'buildingTile[29]',backupColor:'gray'}, {imageName:'buildingTile[2]',backupColor:'gray'}, {imageName:'buildingTile[30]',backupColor:'gray'}, {imageName:'buildingTile[31]',backupColor:'gray'}, {imageName:'buildingTile[32]',backupColor:'gray'}, {imageName:'buildingTile[33]',backupColor:'gray'}, {imageName:'buildingTile[34]',backupColor:'gray'}, {imageName:'buildingTile[35]',backupColor:'gray'}, {imageName:'buildingTile[36]',backupColor:'gray'}, {imageName:'buildingTile[37]',backupColor:'gray'}, {imageName:'buildingTile[38]',backupColor:'gray'}, {imageName:'buildingTile[39]',backupColor:'gray'}, {imageName:'buildingTile[3]',backupColor:'gray'}, {imageName:'buildingTile[40]',backupColor:'gray'}, {imageName:'buildingTile[41]',backupColor:'gray'}, {imageName:'buildingTile[42]',backupColor:'gray'}, {imageName:'buildingTile[43]',backupColor:'gray'}, {imageName:'buildingTile[44]',backupColor:'gray'}, {imageName:'buildingTile[45]',backupColor:'gray'}, {imageName:'buildingTile[46]',backupColor:'gray'}, {imageName:'buildingTile[47]',backupColor:'gray'}, {imageName:'buildingTile[48]',backupColor:'gray'}, {imageName:'buildingTile[49]',backupColor:'gray'}, {imageName:'buildingTile[4]',backupColor:'green'}, {imageName:'buildingTile[50]',backupColor:'brown'}, {imageName:'buildingTile[51]',backupColor:'yellow'}, {imageName:'buildingTile[52]',backupColor:'gray'}, {imageName:'buildingTile[53]',backupColor:'red'}, {imageName:'buildingTile[54]',backupColor:'orange'}, {imageName:'buildingTile[55]',backupColor:'green'}, {imageName:'buildingTile[56]',backupColor:'black'}, {imageName:'buildingTile[57]',backupColor:'blue'}, {imageName:'buildingTile[58]',backupColor:'red'}, {imageName:'buildingTile[59]',backupColor:'green'}, {imageName:'buildingTile[5]',backupColor:'red'}, {imageName:'buildingTile[60]',backupColor:'yellow'}, {imageName:'buildingTile[6]',backupColor:'orange'}, {imageName:'buildingTile[7]',backupColor:'orange'}, {imageName:'buildingTile[8]',backupColor:'white'}, {imageName:'buildingTile[9]',backupColor:'blue'}, {imageName:'building[0]',backupColor:'white'}, {imageName:'building[1]',backupColor:'green'}, {imageName:'building[2]',backupColor:'green'}, {imageName:'building[3]',backupColor:'green'}, {imageName:'bullet',backupColor:'green'}, {imageName:'burgerBronze',backupColor:'orange'}, {imageName:'burgerGold',backupColor:'yellow'}, {imageName:'burgerSilver',backupColor:'gray'}, {imageName:'bush1',backupColor:'orange'}, {imageName:'bush2',backupColor:'yellow'}, {imageName:'cactus',backupColor:'green'}, {imageName:'carBlack',backupColor:'black'}, {imageName:'carBlue',backupColor:'blue'}, {imageName:'carBody',backupColor:'red'}, {imageName:'carGreen',backupColor:'green'}, {imageName:'carRed',backupColor:'red'}, {imageName:'carYellow',backupColor:'yellow'}, {imageName:'cat',backupColor:'orange'}, {imageName:'cherry',backupColor:'orange'}, {imageName:'cloud',backupColor:'gray'}, {imageName:'coin[0]',backupColor:'yellow'}, {imageName:'coin[1]',backupColor:'yellow'}, {imageName:'coin[2]',backupColor:'yellow'}, {imageName:'coin[3]',backupColor:'yellow'}, {imageName:'coin[4]',backupColor:'yellow'}, {imageName:'coin[5]',backupColor:'yellow'}, {imageName:'coin[6]',backupColor:'yellow'}, {imageName:'coin[7]',backupColor:'yellow'}, {imageName:'coin[8]',backupColor:'yellow'}, {imageName:'crosshairBlue',backupColor:'blue'}, {imageName:'crosshairOutline',backupColor:'blue'}, {imageName:'crystal',backupColor:'green'}, {imageName:'dogBite[0]',backupColor:'brown'}, {imageName:'dogBite[1]',backupColor:'brown'}, {imageName:'dogBite[2]',backupColor:'brown'}, {imageName:'dogBite[3]',backupColor:'brown'}, {imageName:'dogBite[4]',backupColor:'brown'}, {imageName:'dogRun[0]',backupColor:'brown'}, {imageName:'dogRun[1]',backupColor:'brown'}, {imageName:'dogRun[2]',backupColor:'brown'}, {imageName:'dogRun[3]',backupColor:'brown'}, {imageName:'dogRun[4]',backupColor:'brown'}, {imageName:'dogSleep[0]',backupColor:'brown'}, {imageName:'dogSleep[1]',backupColor:'brown'}, {imageName:'dogSleep[2]',backupColor:'brown'}, {imageName:'dogSleep[3]',backupColor:'brown'}, {imageName:'dogWalk[0]',backupColor:'brown'}, {imageName:'dogWalk[1]',backupColor:'brown'}, {imageName:'dogWalk[2]',backupColor:'brown'}, {imageName:'dogWalk[3]',backupColor:'brown'}, {imageName:'dogWalk[4]',backupColor:'brown'}, {imageName:'duckOutlineTarget',backupColor:'green'}, {imageName:'duckTarget',backupColor:'green'}, {imageName:'enemyBlack1',backupColor:'black'}, {imageName:'enemyBlack2',backupColor:'black'}, {imageName:'enemyBlack3',backupColor:'black'}, {imageName:'enemyBlack4',backupColor:'black'}, {imageName:'enemyBlack5',backupColor:'black'}, {imageName:'enemyBlue1',backupColor:'blue'}, {imageName:'enemyBlue2',backupColor:'blue'}, {imageName:'enemyBlue3',backupColor:'blue'}, {imageName:'enemyBlue4',backupColor:'blue'}, {imageName:'enemyBlue5',backupColor:'blue'}, {imageName:'enemyGreen1',backupColor:'green'}, {imageName:'enemyGreen2',backupColor:'green'}, {imageName:'enemyGreen3',backupColor:'green'}, {imageName:'enemyGreen4',backupColor:'green'}, {imageName:'enemyGreen5',backupColor:'green'}, {imageName:'enemyRed1',backupColor:'red'}, {imageName:'enemyRed2',backupColor:'red'}, {imageName:'enemyRed3',backupColor:'red'}, {imageName:'enemyRed4',backupColor:'red'}, {imageName:'enemyRed5',backupColor:'red'}, {imageName:'explosion',backupColor:'orange'}, {imageName:'explosion1',backupColor:'orange'}, {imageName:'explosion2',backupColor:'orange'}, {imageName:'femaleAction',backupColor:'blue'}, {imageName:'femaleJump',backupColor:'blue'}, {imageName:'femaleStand',backupColor:'blue'}, {imageName:'femaleWalk1',backupColor:'blue'}, {imageName:'flagBlue1',backupColor:'blue'}, {imageName:'flagGreen1',backupColor:'green'}, {imageName:'flagRed1',backupColor:'red'}, {imageName:'flagYellow1',backupColor:'yellow'}, {imageName:'flagYellow2',backupColor:'yellow'}, {imageName:'flower1',backupColor:'yellow'}, {imageName:'flower2',backupColor:'pink'}, {imageName:'flower3',backupColor:'yellow'}, {imageName:'flower4',backupColor:'orange'}, {imageName:'flower5',backupColor:'green'}, {imageName:'flowerBlue',backupColor:'blue'}, {imageName:'flowerPurple',backupColor:'purple'}, {imageName:'flowerRed',backupColor:'red'}, {imageName:'flowerSmall',backupColor:'blue'}, {imageName:'flyMan',backupColor:'orange'}, {imageName:'gemBlue',backupColor:'blue'}, {imageName:'gemGreen',backupColor:'green'}, {imageName:'gemRed',backupColor:'red'}, {imageName:'gemYellow',backupColor:'yellow'}, {imageName:'gem[0]',backupColor:'purple'}, {imageName:'gem[10]',backupColor:'blue'}, {imageName:'gem[11]',backupColor:'purple'}, {imageName:'gem[12]',backupColor:'green'}, {imageName:'gem[13]',backupColor:'orange'}, {imageName:'gem[14]',backupColor:'blue'}, {imageName:'gem[15]',backupColor:'red'}, {imageName:'gem[16]',backupColor:'blue'}, {imageName:'gem[17]',backupColor:'purple'}, {imageName:'gem[18]',backupColor:'green'}, {imageName:'gem[19]',backupColor:'orange'}, {imageName:'gem[1]',backupColor:'orange'}, {imageName:'gem[20]',backupColor:'blue'}, {imageName:'gem[21]',backupColor:'red'}, {imageName:'gem[22]',backupColor:'blue'}, {imageName:'gem[23]',backupColor:'purple'}, {imageName:'gem[24]',backupColor:'green'}, {imageName:'gem[25]',backupColor:'orange'}, {imageName:'gem[26]',backupColor:'blue'}, {imageName:'gem[27]',backupColor:'red'}, {imageName:'gem[28]',backupColor:'blue'}, {imageName:'gem[29]',backupColor:'purple'}, {imageName:'gem[2]',backupColor:'blue'}, {imageName:'gem[30]',backupColor:'green'}, {imageName:'gem[31]',backupColor:'orange'}, {imageName:'gem[32]',backupColor:'blue'}, {imageName:'gem[33]',backupColor:'red'}, {imageName:'gem[34]',backupColor:'blue'}, {imageName:'gem[35]',backupColor:'purple'}, {imageName:'gem[36]',backupColor:'green'}, {imageName:'gem[37]',backupColor:'orange'}, {imageName:'gem[38]',backupColor:'blue'}, {imageName:'gem[39]',backupColor:'red'}, {imageName:'gem[3]',backupColor:'red'}, {imageName:'gem[40]',backupColor:'blue'}, {imageName:'gem[41]',backupColor:'purple'}, {imageName:'gem[42]',backupColor:'green'}, {imageName:'gem[43]',backupColor:'orange'}, {imageName:'gem[44]',backupColor:'blue'}, {imageName:'gem[45]',backupColor:'red'}, {imageName:'gem[46]',backupColor:'blue'}, {imageName:'gem[47]',backupColor:'green'}, {imageName:'gem[4]',backupColor:'blue'}, {imageName:'gem[5]',backupColor:'purple'}, {imageName:'gem[6]',backupColor:'green'}, {imageName:'gem[7]',backupColor:'orange'}, {imageName:'gem[8]',backupColor:'blue'}, {imageName:'gem[9]',backupColor:'red'}, {imageName:'grass',backupColor:'green'}, {imageName:'groundCake',backupColor:'pink'}, {imageName:'groundGrass',backupColor:'brown'}, {imageName:'groundSnow',backupColor:'gray'}, {imageName:'groundStone',backupColor:'gray'}, {imageName:'gummyWorm',backupColor:'red'}, {imageName:'heart',backupColor:'red'}, {imageName:'heartSmall',backupColor:'red'}, {imageName:'heroHello',backupColor:'gray'}, {imageName:'heroStand',backupColor:'gray'}, {imageName:'heroWalk',backupColor:'gray'}, {imageName:'house[0]',backupColor:'green'}, {imageName:'house[1]',backupColor:'green'}, {imageName:'house[2]',backupColor:'green'}, {imageName:'house[3]',backupColor:'green'}, {imageName:'house[4]',backupColor:'orange'}, {imageName:'isoCubeBlue',backupColor:'blue'}, {imageName:'isoCubeOrange',backupColor:'orange'}, {imageName:'isoCubePurple',backupColor:'purple'}, {imageName:'jelly[0]',backupColor:'gray'}, {imageName:'jelly[1]',backupColor:'yellow'}, {imageName:'jelly[2]',backupColor:'green'}, {imageName:'jelly[3]',backupColor:'red'}, {imageName:'jelly[4]',backupColor:'blue'}, {imageName:'jelly[5]',backupColor:'purple'}, {imageName:'jetpack',backupColor:'gray'}, {imageName:'jewelBlue',backupColor:'blue'}, {imageName:'jewelGreen',backupColor:'green'}, {imageName:'jewelRed',backupColor:'red'}, {imageName:'jewelYellow',backupColor:'yellow'}, {imageName:'joystick',backupColor:'black'}, {imageName:'kufte',backupColor:'brown'}, {imageName:'lampBlue',backupColor:'blue'}, {imageName:'lampGray',backupColor:'gray'}, {imageName:'lampGreen',backupColor:'green'}, {imageName:'lampPink',backupColor:'pink'}, {imageName:'lampRed',backupColor:'red'}, {imageName:'lampYellow',backupColor:'yellow'}, {imageName:'laserBlue[0]',backupColor:'blue'}, {imageName:'laserBlue[1]',backupColor:'blue'}, {imageName:'laserBlue[2]',backupColor:'blue'}, {imageName:'laserGreen[0]',backupColor:'green'}, {imageName:'laserGreen[1]',backupColor:'green'}, {imageName:'laserGreen[2]',backupColor:'green'}, {imageName:'laserRed[0]',backupColor:'red'}, {imageName:'laserRed[1]',backupColor:'red'}, {imageName:'laserRed[2]',backupColor:'red'}, {imageName:'lava',backupColor:'red'}, {imageName:'lollipopFruitYellow',backupColor:'yellow'}, {imageName:'missile[0]',backupColor:'gray'}, {imageName:'missile[1]',backupColor:'blue'}, {imageName:'missile[2]',backupColor:'blue'}, {imageName:'missile[3]',backupColor:'blue'}, {imageName:'missile[4]',backupColor:'blue'}, {imageName:'missile[5]',backupColor:'blue'}, {imageName:'missile[6]',backupColor:'blue'}, {imageName:'missile[7]',backupColor:'red'}, {imageName:'missile[8]',backupColor:'red'}, {imageName:'missile[9]',backupColor:'red'}, {imageName:'motorBlack',backupColor:'black'}, {imageName:'motorBlue',backupColor:'blue'}, {imageName:'motorGreen',backupColor:'green'}, {imageName:'motorRed',backupColor:'red'}, {imageName:'motorYellow',backupColor:'yellow'}, {imageName:'ninja[0]',backupColor:'black'}, {imageName:'ninja[1]',backupColor:'black'}, {imageName:'ninja[2]',backupColor:'black'}, {imageName:'ninja[3]',backupColor:'black'}, {imageName:'ninja[4]',backupColor:'black'}, {imageName:'ninja[5]',backupColor:'black'}, {imageName:'ninja[6]',backupColor:'black'}, {imageName:'ninja[7]',backupColor:'black'}, {imageName:'ninja[8]',backupColor:'black'}, {imageName:'ninja[9]',backupColor:'black'}, {imageName:'note',backupColor:'black'}, {imageName:'paddle',backupColor:'brown'}, {imageName:'paddleGhost',backupColor:'brown'}, {imageName:'parrot',backupColor:'yellow'}, {imageName:'pillBlue',backupColor:'blue'}, {imageName:'pillGreen',backupColor:'green'}, {imageName:'pillRed',backupColor:'red'}, {imageName:'pillYellow',backupColor:'yellow'}, {imageName:'pirateHero',backupColor:'brown'}, {imageName:'pirate[0]',backupColor:'brown'}, {imageName:'pirate[10]',backupColor:'brown'}, {imageName:'pirate[11]',backupColor:'brown'}, {imageName:'pirate[12]',backupColor:'brown'}, {imageName:'pirate[13]',backupColor:'brown'}, {imageName:'pirate[14]',backupColor:'brown'}, {imageName:'pirate[15]',backupColor:'brown'}, {imageName:'pirate[1]',backupColor:'brown'}, {imageName:'pirate[2]',backupColor:'brown'}, {imageName:'pirate[3]',backupColor:'brown'}, {imageName:'pirate[4]',backupColor:'brown'}, {imageName:'pirate[5]',backupColor:'brown'}, {imageName:'pirate[6]',backupColor:'brown'}, {imageName:'pirate[7]',backupColor:'brown'}, {imageName:'pirate[8]',backupColor:'brown'}, {imageName:'pirate[9]',backupColor:'brown'}, {imageName:'plane',backupColor:'green'}, {imageName:'planeGray',backupColor:'gray'}, {imageName:'planeGreen',backupColor:'green'}, {imageName:'playerShip1_blue',backupColor:'blue'}, {imageName:'playerShip1_green',backupColor:'green'}, {imageName:'playerShip1_orange',backupColor:'orange'}, {imageName:'playerShip1_red',backupColor:'red'}, {imageName:'playerShip2_blue',backupColor:'blue'}, {imageName:'playerShip2_green',backupColor:'green'}, {imageName:'playerShip2_orange',backupColor:'orange'}, {imageName:'playerShip2_red',backupColor:'red'}, {imageName:'playerShip3_blue',backupColor:'blue'}, {imageName:'playerShip3_green',backupColor:'green'}, {imageName:'playerShip3_orange',backupColor:'orange'}, {imageName:'playerShip3_red',backupColor:'red'}, {imageName:'powerupBlue',backupColor:'blue'}, {imageName:'powerupBlueBolt',backupColor:'blue'}, {imageName:'powerupBlueShield',backupColor:'blue'}, {imageName:'powerupBlueStar',backupColor:'blue'}, {imageName:'powerupGreen',backupColor:'green'}, {imageName:'powerupGreenBolt',backupColor:'green'}, {imageName:'powerupGreenShield',backupColor:'green'}, {imageName:'powerupGreenStar',backupColor:'green'}, {imageName:'powerupRed',backupColor:'red'}, {imageName:'powerupRedBolt',backupColor:'red'}, {imageName:'powerupRedShield',backupColor:'red'}, {imageName:'powerupRedStar',backupColor:'red'}, {imageName:'powerupYellow',backupColor:'yellow'}, {imageName:'powerupYellowBolt',backupColor:'yellow'}, {imageName:'powerupYellowShield',backupColor:'yellow'}, {imageName:'powerupYellowStar',backupColor:'yellow'}, {imageName:'princess[0]',backupColor:'red'}, {imageName:'princess[10]',backupColor:'red'}, {imageName:'princess[11]',backupColor:'red'}, {imageName:'princess[12]',backupColor:'red'}, {imageName:'princess[13]',backupColor:'red'}, {imageName:'princess[14]',backupColor:'red'}, {imageName:'princess[15]',backupColor:'red'}, {imageName:'princess[16]',backupColor:'red'}, {imageName:'princess[17]',backupColor:'red'}, {imageName:'princess[18]',backupColor:'red'}, {imageName:'princess[19]',backupColor:'red'}, {imageName:'princess[1]',backupColor:'red'}, {imageName:'princess[2]',backupColor:'red'}, {imageName:'princess[3]',backupColor:'red'}, {imageName:'princess[4]',backupColor:'red'}, {imageName:'princess[5]',backupColor:'red'}, {imageName:'princess[6]',backupColor:'red'}, {imageName:'princess[7]',backupColor:'red'}, {imageName:'princess[8]',backupColor:'red'}, {imageName:'princess[9]',backupColor:'red'}, {imageName:'repair',backupColor:'black'}, {imageName:'robot',backupColor:'orange'}, {imageName:'robotHero[0]',backupColor:'orange'}, {imageName:'robotHero[1]',backupColor:'orange'}, {imageName:'robotHero[2]',backupColor:'orange'}, {imageName:'robotHero[3]',backupColor:'orange'}, {imageName:'robotHero[4]',backupColor:'orange'}, {imageName:'robotHero[5]',backupColor:'orange'}, {imageName:'robotHero[6]',backupColor:'orange'}, {imageName:'robotHero[7]',backupColor:'orange'}, {imageName:'robotJump',backupColor:'green'}, {imageName:'rock',backupColor:'gray'}, {imageName:'rocket[0]',backupColor:'orange'}, {imageName:'rocket[1]',backupColor:'orange'}, {imageName:'rocket[2]',backupColor:'orange'}, {imageName:'rocket[3]',backupColor:'orange'}, {imageName:'sailor',backupColor:'brown'}, {imageName:'scrollHorizontal',backupColor:'black'}, {imageName:'scrollVertical',backupColor:'black'}, {imageName:'shieldBronze',backupColor:'orange'}, {imageName:'shieldGold',backupColor:'yellow'}, {imageName:'shieldSilver',backupColor:'gray'}, {imageName:'shooter',backupColor:'brown'}, {imageName:'shop',backupColor:'brown'}, {imageName:'sign',backupColor:'brown'}, {imageName:'signExit',backupColor:'brown'}, {imageName:'signLeft',backupColor:'brown'}, {imageName:'signRight',backupColor:'brown'}, {imageName:'slabBlue',backupColor:'blue'}, {imageName:'slabRed',backupColor:'red'}, {imageName:'slabYellow',backupColor:'yellow'}, {imageName:'spaceStation[0]',backupColor:'gray'}, {imageName:'spaceStation[1]',backupColor:'gray'}, {imageName:'spaceStation[2]',backupColor:'gray'}, {imageName:'spaceStation[3]',backupColor:'gray'}, {imageName:'spaceship[0]',backupColor:'gray'}, {imageName:'spaceship[1]',backupColor:'gray'}, {imageName:'spaceship[2]',backupColor:'gray'}, {imageName:'spaceship[3]',backupColor:'gray'}, {imageName:'spaceship[4]',backupColor:'gray'}, {imageName:'spaceship[5]',backupColor:'gray'}, {imageName:'spaceship[6]',backupColor:'gray'}, {imageName:'spaceship[7]',backupColor:'gray'}, {imageName:'spaceship[8]',backupColor:'gray'}, {imageName:'spaceship[9]',backupColor:'gray'}, {imageName:'spikeMan',backupColor:'red'}, {imageName:'spring',backupColor:'gray'}, {imageName:'springMan',backupColor:'orange'}, {imageName:'sprung',backupColor:'orange'}, {imageName:'spy[0]',backupColor:'black'}, {imageName:'spy[1]',backupColor:'black'}, {imageName:'spy[2]',backupColor:'black'}, {imageName:'spy[3]',backupColor:'black'}, {imageName:'spy[4]',backupColor:'black'}, {imageName:'spy[5]',backupColor:'black'}, {imageName:'spy[6]',backupColor:'black'}, {imageName:'spy[7]',backupColor:'black'}, {imageName:'spy[8]',backupColor:'black'}, {imageName:'spy[9]',backupColor:'black'}, {imageName:'star',backupColor:'black'}, {imageName:'starBronze',backupColor:'orange'}, {imageName:'starDiamond',backupColor:'blue'}, {imageName:'starGold',backupColor:'yellow'}, {imageName:'starSilver',backupColor:'orange'}, {imageName:'sun',backupColor:'orange'}, {imageName:'tank[0]',backupColor:'gray'}, {imageName:'tank[1]',backupColor:'gray'}, {imageName:'tank[2]',backupColor:'gray'}, {imageName:'tank[3]',backupColor:'gray'}, {imageName:'tank[4]',backupColor:'gray'}, {imageName:'tank[5]',backupColor:'gray'}, {imageName:'tank[6]',backupColor:'gray'}, {imageName:'tank[7]',backupColor:'gray'}, {imageName:'tanksAmmo',backupColor:'black'}, {imageName:'tanksArmor',backupColor:'red'}, {imageName:'thunderBronze',backupColor:'orange'}, {imageName:'thunderGold',backupColor:'yellow'}, {imageName:'thunderGray',backupColor:'gray'}, {imageName:'torch',backupColor:'brown'}, {imageName:'torchOff',backupColor:'gray'}, {imageName:'tree[0]',backupColor:'orange'}, {imageName:'tree[1]',backupColor:'orange'}, {imageName:'tree[2]',backupColor:'orange'}, {imageName:'tree[3]',backupColor:'orange'}, {imageName:'tree[4]',backupColor:'orange'}, {imageName:'troll',backupColor:'brown'}, {imageName:'vehicle[0]',backupColor:'gray'}, {imageName:'vehicle[10]',backupColor:'gray'}, {imageName:'vehicle[11]',backupColor:'gray'}, {imageName:'vehicle[12]',backupColor:'gray'}, {imageName:'vehicle[13]',backupColor:'gray'}, {imageName:'vehicle[14]',backupColor:'gray'}, {imageName:'vehicle[15]',backupColor:'gray'}, {imageName:'vehicle[1]',backupColor:'gray'}, {imageName:'vehicle[2]',backupColor:'gray'}, {imageName:'vehicle[3]',backupColor:'gray'}, {imageName:'vehicle[4]',backupColor:'gray'}, {imageName:'vehicle[5]',backupColor:'gray'}, {imageName:'vehicle[6]',backupColor:'gray'}, {imageName:'vehicle[7]',backupColor:'gray'}, {imageName:'vehicle[8]',backupColor:'gray'}, {imageName:'vehicle[9]',backupColor:'gray'}, {imageName:'volcano',backupColor:'black'}, {imageName:'zombie',backupColor:'green'}, {imageName:'zombieHello',backupColor:'green'}, {imageName:'zombieWalk',backupColor:'green'}, {imageName:'towerBlue1', backupColor:'blue'}, {imageName:'towerBlue2', backupColor:'blue'}, {imageName:'towerBlue3', backupColor:'blue'}, {imageName:'towerGreen1', backupColor:'green'}, {imageName:'towerGreen2', backupColor:'green'}, {imageName:'towerGreen3', backupColor:'green'}, {imageName:'towerRed1', backupColor:'red'}, {imageName:'towerRed2', backupColor:'red'}, {imageName:'rhombus',backupColor:'black'}, 
+                {imageName:'circle',backupColor:'black'}, {imageName:'backField',backupColor:'green'}];
+
+                // For each element of array - create a global variable
+                for (let i = 0; i < imageObjectList.length; i++) {
+                    let name = imageObjectList[i].imageName,
+                        backupColor = imageObjectList[i].backupColor;
+
+                    // Handle image names like "gosho[21]"
+                    if (name.indexOf("[") > -1) {
+                        let arrayName = name.slice(0, name.indexOf("["));
+                        let arrayNumber = name.slice(name.indexOf("[") + 1, name.indexOf("]"));
+                        if (!window[arrayName]) {
+                            window[arrayName] = [];
+                        }
+                        window[arrayName][arrayNumber] = tryToLoad(name, backupColor);
+                    } else {
+                        // Handle image names like "pesho"
+                        window[name] = tryToLoad(name, backupColor);
+                    }
+                }
+            }());
+
+            function areColliding(Ax, Ay, Awidth, Aheight, Bx, By, Bwidth, Bheight) {
+                if (Bx <= Ax + Awidth) {
+                    if (Ax <= Bx + Bwidth) {
+                        if (By <= Ay + Aheight) {
+                            if (Ay <= By + Bheight) {
+                                return 1;
+                            }
+                        }
+                    }
+                }
+                return 0;
+            };
+
+            function randomInteger(upTo) {
+                return Math.floor(Math.random() * upTo);
+            }
+
+            function drawLine(startX, startY, endX, endY) {
+                // For better performance bunch calls to lineTo without beginPath() and stroke() inbetween.
+                context.beginPath(); // resets the current path
+                context.moveTo(startX, startY);
+                context.lineTo(endX, endY);
+                context.stroke();
+            }
+
+            function tryToLoad(imageNameWithoutDotPng, backupColor) {
+                return new MyImage("./images/" + imageNameWithoutDotPng + ".png", backupColor);
+            }
+            
+            function tryToLoadWithFullPath(pathAndImageName, backupColor) {
+                return new MyImage(pathAndImageName, backupColor);
+            }
+
+            function drawImage(myImageObject, x, y, xs, ys) {
+                myImageObject.draw(x,y,xs,ys);
+            }
+
+            function isFunction(f) {
+                return typeof(f) == "function";
+            }
+
+            function updateMousePosition(e) {
+                let boundingRect = canvas.getBoundingClientRect();
+                mouseX = e.pageX - boundingRect.x;
+                mouseY = e.pageY - boundingRect.y;
+            }
+            
+            function updateMousePositionTouchEvent(e) {
+                let boundingRect = canvas.getBoundingClientRect();
+                let touchobj = e.changedTouches[0];
+                mouseX = touchobj.pageX - boundingRect.x;
+                mouseY = touchobj.pageY - boundingRect.y;
+            }
+
+            function getCanvas() {
+                // Get canvas element
+                canvas = document.getElementById("canvas-id");
+
+                if (endlessCanvas) {
+                    canvas.width = window.innerWidth;
+                    canvas.height = window.innerHeight;
+
+                    // Change canvas.width and .height on browser resize
+                    window.onresize = function() {
+                        canvas.width = window.innerWidth;
+                        canvas.height = window.innerHeight;
+                    };
+                } else {
+                    // Default canvas size
+                    canvas.width = 800;
+                    canvas.height = 600;
+                }
+
+                // Get 2d context
+                context = canvas.getContext("2d");
+                context.fillStyle = "#0000ff";
+            }
+            
+            function attachEvents() {
+                // Events for touchscreen devices
+                if ('ontouchstart' in window || navigator.maxTouchPoints) {
+                    isMobile = true;
+                    window.addEventListener("touchstart", function(e) {
+                        // Update global mouseX, mouseY variables
+                        updateMousePositionTouchEvent(e);
+                        if(isFunction(mousedown)){
+                            // Call mousedown from game.js if it exists
+                            mousedown();
+                        }
+                    });
+                    window.addEventListener("touchend", function(e) {
+                        updateMousePositionTouchEvent(e);
+                        if(isFunction(mouseup)) {
+                            mouseup();
+                        }
+                    });
+                    window.addEventListener("touchmove", function(e) {
+                        updateMousePositionTouchEvent(e);
+                    });
+                }
+
+                // Update global mouseX, mouseY variables
+                window.addEventListener("mousemove", function(e) {
+                    updateMousePosition(e);
+                });
+
+                // Call mousemove, mouseup, mousedown function from game.js if they exist
+                if (isFunction(mousemove)) {
+                    window.addEventListener("mousemove", mousemove);
+                }
+                if (isFunction(mouseup)) {
+                    window.addEventListener("mouseup", mouseup);
+                }
+                if (isFunction(mousedown)) {
+                    window.addEventListener("mousedown", mousedown);
+                }
+
+                // Update global isKeyPressed array
+                window.addEventListener("keydown", function(e) {
+                    isKeyPressed[e.keyCode] = 1;
+                    if(isFunction(keydown)) {
+                        keydown(e.keyCode);
+                    }
+                });
+                window.addEventListener("keyup", function(e) {
+                    isKeyPressed[e.keyCode] = 0;
+                    if(isFunction(keyup)) {
+                        keyup(e.keyCode);
+                    }
+                });
+            }
+            // Redraw will be executed many times
+            function redraw() {
+                // Clear the canvas
+                context.clearRect(0, 0, canvas.width, canvas.height);
+
+                context.globalAlpha = 1;
+                context.font = "10px Arial";
+                context.fillStyle = "blue";
+                context.textBaseline = "top";
+
+                // Call draw function from game.js
+                draw();
+
+                
+                // Call redraw after some time (the browser decides this time)
+                reqAnimationFrame(redraw);
+            };
+
+            function initGlobalVariables() {
+                updateTime = 10;
+                mouseX = 0;
+                mouseX = 0;
+                mouseY = 0; 
+                key_left = 37; 
+                key_up = 38; 
+                key_right = 39; 
+                key_down = 40; 
+                key_a = 65; 
+                key_z = 90; 
+                isKeyPressed = new Array(256).fill(0);
+            }
+            function drawError() {
+                // Draw error text on canvas 
+                context.clearRect(0, 0, canvas.width, canvas.height);
+                context.globalAlpha = 1;
+                context.fillStyle = "#FF0000";
+                context.font = "20px Arial";
+                context.fillText("Press <F12> for error info!", 40, 40);
+            }
+            // Starts game when body element is loaded
+            function onBodyLoad() {
+
+                initGlobalVariables();
+
+                getCanvas();
+
+                attachEvents();
+
+                if (!isFunction(draw)) {
+                    // Draw error on canvas when function draw is not in game.js
+                    drawError();
+                    throw new TypeError("draw is not a function (in game.js)");
+                }
+
+                // Call programmers init function if it exists in game.js
+                if(isFunction(init)) {
+                    init();
+                }
+
+                if(!isFunction(update)) {
+                    // Draw error on canvas when function update is not in game.js
+                    drawError();
+                    throw new TypeError("update is not a function (in game.js)");
+                }
+                redraw();
+                setInterval(update, updateTime);
+            }
+        </script>
+        <!-- user's game file -->
+        <script src="game.js"></script>
+    </canvas>
+</body>
+
+</html>
