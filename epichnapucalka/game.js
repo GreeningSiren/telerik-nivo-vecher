@@ -41,7 +41,7 @@ function init() {
 
 function update() {
     // Kodut tuk se izpulnqva (okolo) 100 puti v sekunda
-    if (!gameOver || !win) {
+    if (!gameOver && !win) {
         if (randomInteger(100) === 5) {
             summonQshu(generateenemycoord("x"), generateenemycoord("y"), 3, 3);
         }
@@ -132,7 +132,7 @@ function mouseup() {
 function keyup(key) {
     // Pechatai koda na natisnatiq klavish
     console.log("Pressed", key);
-    if (!gameOver || !win) {
+    if (!gameOver && !win) {
         if (key === 32) {
             player.summonBullet();
         }
