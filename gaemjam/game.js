@@ -44,22 +44,32 @@ function update() {
             }
             if (topki[i].y >= 580 && Math.floor(topki[i].x) == Math.floor(myX)) {
                 topki.splice(i, 1)
+                i--;
+                continue;
             }
 
-            for (let j = 0; j < 16; j++) {
-                for (let k = 0; k < 6; k++) {
+            for (let j = 0; j < blok.length; j++) {
+                for (let k = 0; k < blok[j].length; k++) {
                     if (blok[j][k]) {
-                        if (areColliding(topki[i].x, topki[i].y, 20, 20, (j * 50), k * 50, 50, 30)) { // gore proverka
+                        if (areColliding(topki[i].x, topki[i].y, 20, 20, (j * 50), k * 50, 50, 5)) { // gore proverka
                             topki[i].dy = -topki[i].dy;
+                            blok[j][k] = false;
+                            break;
                         }
-                        if (areColliding(topki[i].x, topki[i].y, 20, 20, (j * 50), (k * 50) + 1, 30, 50)) { // lqvo proverka
-                            topki[i].dx = -topki[i].dx
+                        if (areColliding(topki[i].x, topki[i].y, 20, 20, (j * 50), (k * 50) + 1, 5, 50)) { // lqvo proverka
+                            topki[i].dx = -topki[i].dx;
+                            blok[j][k] = false;
+                            break;
                         }
-                        if (areColliding(topki[i].x, topki[i].y, 20, 20, (j * 50) + 20, k * 50, 30, 50)) { // dqsno proverka
-                            topki[i].dx = -topki[i].dx
+                        if (areColliding(topki[i].x, topki[i].y, 20, 20, (j * 50) + 45, k * 50, 5, 50)) { // dqsno proverka
+                            topki[i].dx = -topki[i].dx;
+                            blok[j][k] = false;
+                            break;
                         }
-                        if (areColliding(topki[i].x, topki[i].y, 20, 20, (j * 50), (k * 50) + 20, 50, 30)) { // dole proverka
-                            topki[i].dy = -topki[i].dy
+                        if (areColliding(topki[i].x, topki[i].y, 20, 20, (j * 50), (k * 50) + 45, 50, 5)) { // dole proverka
+                            topki[i].dy = -topki[i].dy;
+                            blok[j][k] = false;
+                            break;
                         }
                     }
                 }
@@ -69,6 +79,15 @@ function update() {
         if (topki.length == 0) {
             shot = false
             firstBall = true
+            for(let i = 0; i < blok.length; i++) {
+                let sigma;
+                if (randomInteger(3) !== 2) {
+                    sigma = true;
+                } else {
+                    sigma = false;
+                }
+                blok[i].unshift(sigma);
+            }
         }
     }
 }
@@ -81,10 +100,14 @@ function draw() {
     for (let i = 0; i < topki.length; i++) {
         drawImage(kufte, topki[i].x, topki[i].y, 20, 20);
     }
-    for (let i = 0; i < 16; i++) {
-        for (let j = 0; j < 6; j++) {
+    for (let i = 0; i < blok.length; i++) {
+        for (let j = 0; j < blok[i].length; j++) {
+            
             if (blok[i][j]) {
                 drawImage(box, i * 50, j * 50, 50, 50);
+                // context.fillStyle = "red";
+                // context.fillRect((i * 50), (j * 50) + 1, 5, 50);
+                
             }
         }
     }
@@ -92,11 +115,13 @@ function draw() {
 function mouseup() {
     // Pri klik s lqv buton - pokaji koordinatite na mishkata
     console.log("Mouse clicked at", mouseX, mouseY);
+    console.log(shot);
     if (!shot) {
+        let d = dist(myX, myY, mouseX, mouseY);
         let raztoqnieX = mouseX - myX;
-        let raztoqnieY = -Math.abs(mouseY - myY);
+        let raztoqnieY = mouseY - myY;
         for (let i = 0; i < startLenTopki; i++) {
-            setTimeout(() => suzdajTopka(myX, myY, raztoqnieX > 100 ? 100 : raztoqnieX < -100 ? -100 : raztoqnieX, raztoqnieY), i * 100);
+            setTimeout(() => suzdajTopka(myX, myY, raztoqnieX / d * 2, raztoqnieY / d * 2, mouseX, mouseY), i * 100);
         }
         shot = true;
     }
@@ -105,18 +130,22 @@ function mousedown() {
     // set_d(); 
 }
 function keyup(key) {
+    
     // Pechatai koda na natisnatiq klavish
     console.log("Pressed", key);
 }
-function suzdajTopka(x, y, dx, dy) {
+function dist(x, y, mX, mY) {
+    return Math.sqrt((x - mX) * (x - mX) + (y - mY) * (y - mY));
+}
+function suzdajTopka(x, y, dx, dy, mX, mY) {
     topki.push({
         x: x,
         y: y,
         dx: dx,
         dy: dy,
         moveTopka: function () {
-            this.x = this.x + this.dx * 0.04;
-            this.y = this.y + this.dy * 0.04;
+            this.x = this.x + this.dx ;
+            this.y = this.y + this.dy ;
         }
     });
 }
