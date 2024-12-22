@@ -9,7 +9,10 @@ let blok = [];
 let jiwot = [];
 let timer = 0;
 let random = 5;
+let zagubi = false;
 let win = false;
+endlessCanvas = true;
+let disabledCollisions = false;
 function init() {
     // Kodut tuk se izpulnqva vednuj v nachaloto
     myX = 400;
@@ -29,7 +32,7 @@ function init() {
 }
 function update() {
     // Kodut tuk se izpulnqva (okolo) 100 puti v sekunda
-    if (!win) {
+    if (!win && !zagubi) {
         if (shot) {
             // firstBall = true
             for (let i = 0; i < topki.length; i++) {
@@ -49,7 +52,7 @@ function update() {
                     topki[i].dy = 0;
                     topki[i].dx = (myX - topki[i].x) / 13;
                 }
-                if (topki[i].y >= 580 && Math.floor(topki[i].x) == Math.floor(myX)) {
+                if (topki[i].y >= 580 && Math.round(topki[i].x) == Math.round(myX)) {
                     topki.splice(i, 1);
                     i--;
                     continue;
@@ -57,7 +60,9 @@ function update() {
 
                 for (let j = 0; j < blok.length; j++) {
                     for (let k = 0; k < blok[j].length; k++) {
-                        if (blok[j][k]) {
+
+                        //console.log(k * 20);                       
+                        if (blok[j][k] && !disabledCollisions) {
                             if (areColliding(topki[i].x, topki[i].y, 20, 20, (j * 50), k * 50, 50, 5)) { // gore proverka
                                 topki[i].dy = -topki[i].dy;
                                 // blok[j][k] = false;
@@ -96,6 +101,9 @@ function update() {
                 let giveBalls = true
                 for (let i = 0; i < blok.length; i++) {
                     for (let j = 0; j < blok[i].length; j++) {
+                        if (blok[i].length > 12 && blok[i][j]) {
+                            zagubi = true;
+                        }
                         if (blok[i][j]) {
                             giveBalls = false
                         }
@@ -119,6 +127,7 @@ function update() {
                     }
                 }
                 timer++;
+                disabledCollisions = false;
             }
         }
         switch (Math.floor(timer)) {
@@ -161,12 +170,15 @@ function update() {
     }
 }
 function draw() {
-    if (!win) {
+    if (!win && !zagubi) {
         // Tuk naprogramirai kakvo da se risuva
         context.fillStyle = "black";
         context.fillRect(0, 0, 800, 600);
         // drawImage(backField, 0, 0, 800, 600);
         drawImage(kufte, myX, myY, 20, 20);
+        context.fillStyle = "red";
+        context.fillRect(820, 40, 60, 60);
+        writeText("35px Tahoma", "black", "⬇", 843, 55);
         for (let i = 0; i < topki.length; i++) {
             drawImage(kufte, topki[i].x, topki[i].y, 20, 20);
         }
@@ -183,10 +195,16 @@ function draw() {
                 }
             }
         }
-    } else {
+
+    } else if (win) {
         context.fillStyle = "black";
         context.fillRect(0, 0, 800, 600);
         writeText("50px Tahoma", "white", "You won!", 400, 300);
+    } else if (zagubi) {
+        context.fillStyle = "black";
+        context.fillRect(0, 0, 800, 600);
+        writeText("50px Tahoma", "white", "You lost!", 400, 300);
+
     }
 }
 function mouseup() {
@@ -194,7 +212,7 @@ function mouseup() {
         // Pri klik s lqv buton - pokaji koordinatite na mishkata
         console.log("Mouse clicked at", mouseX, mouseY);
         console.log(shot);
-        if (!shot) {
+        if (!shot && mouseX < 800 && mouseY < 475 && mouseX != 0 && mouseY != 0) {
             let d = dist(myX, myY, mouseX, mouseY);
             let raztoqnieX = mouseX - myX;
             let raztoqnieY = mouseY - myY;
@@ -202,6 +220,10 @@ function mouseup() {
                 setTimeout(() => suzdajTopka(myX, myY, raztoqnieX / d * 2, raztoqnieY / d * 2, mouseX, mouseY), i * 100);
             }
             shot = true;
+        } else {
+            if (areColliding(820, 40, 60, 60, mouseX, mouseY, 1, 1) && (topki.length == brTopki || firstBall == false)) {
+                downTopki();
+            }
         }
     }
 }
@@ -259,4 +281,14 @@ function writeText(font, style, text, x, y) {
     context.fillStyle = style;
     context.fillText(text, x, y);
     context.restore();
+}
+
+function downTopki() {
+    disabledCollisions = true;
+    for (let i = 0; i < topki.length; i++) {
+        topki[i].dx = 0;
+        topki[i].dy = 0;
+        setTimeout(() => { topki[i].dx = (myX - topki[i].x) / topki.length; }, 500);
+        setTimeout(() => { topki[i].dy = (myY - topki[i].y) / topki.length; }, 500);
+    }
 }
