@@ -212,7 +212,7 @@ function mouseup() {
         // Pri klik s lqv buton - pokaji koordinatite na mishkata
         console.log("Mouse clicked at", mouseX, mouseY);
         console.log(shot);
-        if (!shot && mouseX < 800 && mouseY < 475 && mouseX != 0 && mouseY != 0) {
+        if (!shot && mouseX < 800 && mouseY < 550 && mouseX != 0 && mouseY != 0) {
             let d = dist(myX, myY, mouseX, mouseY);
             let raztoqnieX = mouseX - myX;
             let raztoqnieY = mouseY - myY;
