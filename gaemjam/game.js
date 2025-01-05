@@ -13,6 +13,7 @@ let zagubi = false;
 let win = false;
 endlessCanvas = true;
 let disabledCollisions = false;
+let shootTimeouts = [];
 function init() {
     // Kodut tuk se izpulnqva vednuj v nachaloto
     myX = 400;
@@ -99,9 +100,13 @@ function update() {
                 shot = false;
                 firstBall = true;
                 let giveBalls = true
+                shootTimeouts.splice(0, shootTimeouts.length);
                 for (let i = 0; i < blok.length; i++) {
                     for (let j = 0; j < blok[i].length; j++) {
-                        if (blok[i].length > 12 && blok[i][j]) {
+                        if (blok[i][j].length > 12 && blok[i][13]) {
+                            zagubi = true;
+                        }
+                        if(areColliding(myX, myY, 20, 20, (i * 50), j * 50, 50, 50) && blok[i][j]){
                             zagubi = true;
                         }
                         if (blok[i][j]) {
@@ -217,11 +222,11 @@ function mouseup() {
             let raztoqnieX = mouseX - myX;
             let raztoqnieY = mouseY - myY;
             for (let i = 0; i < brTopki; i++) {
-                setTimeout(() => suzdajTopka(myX, myY, raztoqnieX / d * 2, raztoqnieY / d * 2, mouseX, mouseY), i * 100);
+                shootTimeouts[i] = setTimeout(() => suzdajTopka(myX, myY, raztoqnieX / d * 2, raztoqnieY / d * 2, mouseX, mouseY), i * 100);
             }
             shot = true;
         } else {
-            if (areColliding(820, 40, 60, 60, mouseX, mouseY, 1, 1) && (topki.length == brTopki || firstBall == false)) {
+            if (areColliding(820, 40, 60, 60, mouseX, mouseY, 1, 1) /* && (topki.length == brTopki || firstBall == false) */) {
                 downTopki();
             }
         }
@@ -250,12 +255,7 @@ function suzdajTopka(x, y, dx, dy, mX, mY) {
         }
     });
 }
-function set_d() {
-    for (let i = 0; i < topki.length; i++) {
-        topki[i].dx = mouseX - 420;
-        topki[i].dy = mouseY - 600;
-    }
-}
+
 function move() {
     for (let i = 0; i < topki.length; i++) {
         topki[i].x = topki[i].x + dx * 0.1;
@@ -285,6 +285,9 @@ function writeText(font, style, text, x, y) {
 
 function downTopki() {
     disabledCollisions = true;
+    for(let i = 0; i < shootTimeouts.length; i++){
+        clearTimeout(shootTimeouts[i]);
+    }
     for (let i = 0; i < topki.length; i++) {
         topki[i].dx = 0;
         topki[i].dy = 0;
