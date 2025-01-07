@@ -14,6 +14,16 @@ let win = false;
 endlessCanvas = true;
 let disabledCollisions = false;
 let shootTimeouts = [];
+let level = 1;
+let gameStarted = false;
+let gameMode;
+
+const blockBreakAudio = new Audio("./audio/blockbreak.ogg");
+const endlessClearAudio = new Audio("./audio/endlessclear.ogg");
+const hitBlockAudio = new Audio("./audio/hitblock.ogg");
+const musicInGameAudio = new Audio("./audio/music_ingame.ogg");
+musicInGameAudio.loop = true;
+
 function init() {
     // Kodut tuk se izpulnqva vednuj v nachaloto
     myX = 400;
@@ -22,14 +32,11 @@ function init() {
         blok[i] = [];
         jiwot[i] = [];
         for (let j = 0; j < 6; j++) {
-            if (randomInteger(3) !== 2) {
-                blok[i][j] = true;
-                jiwot[i][j] = randomInteger(random) + 1;
-            } else {
-                blok[i][j] = false;
-            }
+            blok[i][j] = false;
+            jiwot[i][j] = 0;
         }
     }
+    loadLevel(level);
 }
 function update() {
     // Kodut tuk se izpulnqva (okolo) 100 puti v sekunda
@@ -68,28 +75,43 @@ function update() {
                                 topki[i].dy = -topki[i].dy;
                                 // blok[j][k] = false;
                                 jiwot[j][k]--;
+                                let audio = hitBlockAudio.cloneNode();
+                                audio.play();
+                                audio = null;
                                 break;
                             }
                             if (areColliding(topki[i].x, topki[i].y, 20, 20, (j * 50), (k * 50) + 1, 5, 50)) { // lqvo proverka
                                 topki[i].dx = -topki[i].dx;
                                 // blok[j][k] = false;
                                 jiwot[j][k]--;
+                                let audio = hitBlockAudio.cloneNode();
+                                audio.play();
+                                audio = null;
                                 break;
                             }
                             if (areColliding(topki[i].x, topki[i].y, 20, 20, (j * 50) + 45, k * 50, 5, 50)) { // dqsno proverka
                                 topki[i].dx = -topki[i].dx;
                                 // blok[j][k] = false;
                                 jiwot[j][k]--;
+                                let audio = hitBlockAudio.cloneNode();
+                                audio.play();
+                                audio = null;
                                 break;
                             }
                             if (areColliding(topki[i].x, topki[i].y, 20, 20, (j * 50), (k * 50) + 45, 50, 5)) { // dole proverka
                                 topki[i].dy = -topki[i].dy;
                                 // blok[j][k] = false;
                                 jiwot[j][k]--;
+                                let audio = hitBlockAudio.cloneNode();
+                                audio.play();
+                                audio = null;
                                 break;
                             }
                             if (jiwot[j][k] <= 0) {
                                 blok[j][k] = false;
+                                let audio = blockBreakAudio.cloneNode();
+                                audio.play();
+                                audio = null;
                             }
                         }
                     }
@@ -99,7 +121,7 @@ function update() {
             if (topki.length == 0) {
                 shot = false;
                 firstBall = true;
-                let giveBalls = true
+                let giveBalls = true;
                 shootTimeouts.splice(0, shootTimeouts.length);
                 for (let i = 0; i < blok.length; i++) {
                     for (let j = 0; j < blok[i].length; j++) {
@@ -110,72 +132,51 @@ function update() {
                             zagubi = true;
                         }
                         if (blok[i][j]) {
-                            giveBalls = false
+                            giveBalls = false;
                         }
 
                     }
-                    let sigma;
-                    if (randomInteger(3) !== 2) {
-                        sigma = true;
-                    } else {
-                        sigma = false;
+                    if (gameMode === "story") {
+                        blok[i].unshift(false);
+                        jiwot[i].unshift(0);
+                    } else if (gameMode === "endless") {
+                        let sigma;
+                        if (randomInteger(3) !== 2) {
+                            sigma = true;
+                        } else {
+                            sigma = false;
+                        }
+                        blok[i].unshift(sigma);
+                        jiwot[i].unshift(randomInteger(random) + 1);
                     }
-                    blok[i].unshift(sigma);
-                    jiwot[i].unshift(randomInteger(random) + 1);
+
 
                 }
                 if (giveBalls) {
-                    brTopki += 50;
-
-                    if (timer >= 16) {
-                        win = true
+                    endlessClearAudio.play();
+                    if(gameMode == "story") {
+                        brTopki += 25;
+                        level++;
+                        loadLevel(level);
+                    } else {
+                        brTopki += 50;
                     }
+                    // if (timer >= 16) {
+                    //     win = true
+                    // }
                 }
                 timer++;
                 disabledCollisions = false;
             }
-        }
-        switch (Math.floor(timer)) {
-            case 0:
-            case 1:
-            case 2:
-            case 3:
-                random = 5;
-                break;
-
-            case 4:
-            case 5:
-            case 6:
-            case 7:
-                random = 10;
-                break;
-
-            case 8:
-            case 9:
-            case 10:
-            case 11:
-                random = 15;
-                break;
-
-            case 12:
-            case 13:
-            case 14:
-            case 15:
-                random = 25;
-                break;
-
-            case 16:
-                random = 35;
-                break;
-
-            default:
-                random = 35;
-                break;
+        } else {
+            if(topki.length > 0) {
+                topki.splice(0, topki.length);
+            }
         }
     }
 }
 function draw() {
-    if (!win && !zagubi) {
+    if (!win && !zagubi && gameStarted) {
         // Tuk naprogramirai kakvo da se risuva
         context.fillStyle = "black";
         context.fillRect(0, 0, 800, 600);
@@ -184,6 +185,13 @@ function draw() {
         context.fillStyle = "red";
         context.fillRect(820, 40, 60, 60);
         writeText("35px Tahoma", "black", "⬇", 843, 55);
+        context.fillStyle = "blue";
+        context.fillRect(820, 120, 60, 60);
+        if (musicInGameAudio.volume === 1) {
+            writeText("35px Tahoma", "black", "🔊", 830, 135);
+        } else {
+            writeText("35px Tahoma", "black", "🔇", 830, 135);
+        }
         for (let i = 0; i < topki.length; i++) {
             drawImage(kufte, topki[i].x, topki[i].y, 20, 20);
         }
@@ -210,25 +218,63 @@ function draw() {
         context.fillRect(0, 0, 800, 600);
         writeText("50px Tahoma", "white", "You lost!", 400, 300);
 
+    } else if (!gameStarted) {
+        context.fillStyle = "black";
+        context.fillRect(0, 0, 800, 600);
+        writeText("50px Tahoma", "white", "Mqtaj Topki", 300, 100);
+        writeText("20px Tahoma", "red", "by Kolyo i Bobaka", 300, 150);
+        context.fillStyle = "white";
+        context.fillRect(300, 200, 200, 50);
+        context.fillRect(300, 300, 200, 50);
+        context.fillStyle = "black";
+        writeText("30px Tahoma", "black", "Story Mode", 330, 210);
+        writeText("30px Tahoma", "black", "Endless Mode", 315, 310);
     }
 }
 function mouseup() {
-    if (!win) {
+    if (!win && !zagubi && gameStarted) {
         // Pri klik s lqv buton - pokaji koordinatite na mishkata
         console.log("Mouse clicked at", mouseX, mouseY);
         console.log(shot);
-        if (!shot && mouseX < 800 && mouseY < 550 && mouseX != 0 && mouseY != 0) {
+        if (!shot && mouseX < 800 && mouseY < 550 && mouseY != 0) {
             let d = dist(myX, myY, mouseX, mouseY);
             let raztoqnieX = mouseX - myX;
             let raztoqnieY = mouseY - myY;
-            for (let i = 0; i < brTopki; i++) {
-                shootTimeouts[i] = setTimeout(() => suzdajTopka(myX, myY, raztoqnieX / d * 2, raztoqnieY / d * 2, mouseX, mouseY), i * 100);
-            }
             shot = true;
+            for (let i = 0; i < brTopki; i++) {
+                shootTimeouts[i] = setTimeout(() => suzdajTopka(myX, myY, raztoqnieX / d * 3, raztoqnieY / d * 3, mouseX, mouseY), i * 100);
+            }
         } else {
-            if (areColliding(820, 40, 60, 60, mouseX, mouseY, 1, 1) /* && (topki.length == brTopki || firstBall == false) */) {
+            if (areColliding(820, 40, 60, 60, mouseX, mouseY, 1, 1) && shot /* && (topki.length == brTopki || firstBall == false) */) {
                 downTopki();
             }
+            if (areColliding(820, 120, 60, 60, mouseX, mouseY, 1, 1)) {
+                if (musicInGameAudio.volume === 1) {
+                    musicInGameAudio.volume = 0;
+                } else {
+                    musicInGameAudio.volume = 1;
+                }
+            }
+        }
+    } else if (!gameStarted) {
+        if (areColliding(300, 200, 200, 50, mouseX, mouseY, 1, 1)) {
+            gameStarted = true;
+            gameMode = "story";
+            musicInGameAudio.play();
+        } else if (areColliding(300, 300, 200, 50, mouseX, mouseY, 1, 1)) {
+            gameStarted = true;
+            gameMode = "endless";
+            for(let i = 0; i < 16; i++){
+                for(let j = 0; j < 6; j++){
+                    if (randomInteger(3) !== 2) {
+                        blok[i][j] = true;
+                        jiwot[i][j] = randomInteger(random) + 1;
+                    } else {
+                        blok[i][j] = false;
+                    }
+                }
+            }
+            musicInGameAudio.play();
         }
     }
 }
@@ -285,13 +331,13 @@ function writeText(font, style, text, x, y) {
 
 function downTopki() {
     disabledCollisions = true;
+    console.log("downTopki");
     for(let i = 0; i < shootTimeouts.length; i++){
         clearTimeout(shootTimeouts[i]);
     }
     for (let i = 0; i < topki.length; i++) {
         topki[i].dx = 0;
         topki[i].dy = 0;
-        setTimeout(() => { topki[i].dx = (myX - topki[i].x) / topki.length; }, 500);
-        setTimeout(() => { topki[i].dy = (myY - topki[i].y) / topki.length; }, 500);
+        setTimeout(() => { topki[i].dx = (myX - topki[i].x) / topki.length;topki[i].dy = (myY - topki[i].y) / topki.length; }, 500);
     }
 }
