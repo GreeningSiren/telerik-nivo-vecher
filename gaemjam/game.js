@@ -19,10 +19,21 @@ let gameStarted = false;
 let gameMode;
 
 const blockBreakAudio = new Audio("./audio/blockbreak.ogg");
-const endlessClearAudio = new Audio("./audio/endlessclear.ogg");
+blockBreakAudio.volume = 0.75;
+const hitWallAudio = new Audio("./audio/hitwall.ogg");
+hitWallAudio.volume = 0.5;
 const hitBlockAudio = new Audio("./audio/hitblock.ogg");
+hitBlockAudio.volume = 0.5;
+const endlessClearAudio = new Audio("./audio/endlessclear.ogg");
 const musicInGameAudio = new Audio("./audio/music_ingame.ogg");
 musicInGameAudio.loop = true;
+
+window.addEventListener("blur", () => {
+    musicInGameAudio.pause();
+});
+window.addEventListener("focus", () => {
+    musicInGameAudio.play();
+});
 
 function init() {
     // Kodut tuk se izpulnqva vednuj v nachaloto
@@ -47,9 +58,15 @@ function update() {
                 topki[i].moveTopka();
                 if (areColliding(-10, 1, 10, 800, topki[i].x, topki[i].y, 20, 20) || areColliding(800, 1, 20, 800, topki[i].x, topki[i].y, 20, 20)) { // proverka lqvo i dqsno
                     topki[i].dx = -topki[i].dx;
+                    let audio = hitWallAudio.cloneNode();
+                    audio.play();
+                    audio = null;
                 }
                 if (areColliding(0, 0, 800, 10, topki[i].x, topki[i].y, 20, 20)) { // proverka gore
                     topki[i].dy = -topki[i].dy;
+                    let audio = hitWallAudio.cloneNode();
+                    audio.play();
+                    audio = null;
                 }
                 if (topki[i].y >= 580 && topki[i].x != myX) {
                     if (firstBall) {
@@ -338,6 +355,8 @@ function downTopki() {
     for (let i = 0; i < topki.length; i++) {
         topki[i].dx = 0;
         topki[i].dy = 0;
+        hitWallAudio.volume = 0;
         setTimeout(() => { topki[i].dx = (myX - topki[i].x) / topki.length;topki[i].dy = (myY - topki[i].y) / topki.length; }, 500);
+        hitWallAudio.volume = 0.5;    
     }
 }
