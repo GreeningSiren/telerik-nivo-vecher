@@ -32,7 +32,9 @@ window.addEventListener("blur", () => {
     musicInGameAudio.pause();
 });
 window.addEventListener("focus", () => {
-    musicInGameAudio.play();
+    if(gameStarted) {
+        musicInGameAudio.play();
+    }
 });
 
 function init() {
