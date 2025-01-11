@@ -2,7 +2,7 @@
 let myX, myY;
 let topki = [];
 const kufte = tryToLoad("kufte", "brown");
-let brTopki = 50;
+let brTopki = 25;
 let shot = false;
 let firstBall = true;
 let blok = [];
@@ -17,6 +17,9 @@ let shootTimeouts = [];
 let level = 1;
 let gameStarted = false;
 let gameMode;
+let startTime = 0;
+let currentTime = 0;
+let limit = 0;
 
 const blockBreakAudio = new Audio("./audio/blockbreak.ogg");
 blockBreakAudio.volume = 0.75;
@@ -32,7 +35,7 @@ window.addEventListener("blur", () => {
     musicInGameAudio.pause();
 });
 window.addEventListener("focus", () => {
-    if(gameStarted) {
+    if (gameStarted) {
         musicInGameAudio.play();
     }
 });
@@ -53,22 +56,34 @@ function init() {
 }
 function update() {
     // Kodut tuk se izpulnqva (okolo) 100 puti v sekunda
+    limit = 0;
     if (!win && !zagubi) {
+        currentTime = new Date();
         if (shot) {
             // firstBall = true
+
             for (let i = 0; i < topki.length; i++) {
+
                 topki[i].moveTopka();
                 if (areColliding(-10, 1, 10, 800, topki[i].x, topki[i].y, 20, 20) || areColliding(800, 1, 20, 800, topki[i].x, topki[i].y, 20, 20)) { // proverka lqvo i dqsno
                     topki[i].dx = -topki[i].dx;
-                    let audio = hitWallAudio.cloneNode();
-                    audio.play();
-                    audio = null;
+                    if (limit < 10) {
+                        let audio = hitWallAudio.cloneNode();
+                        limit++;
+                        audio.play();
+                        audio = null;
+                        
+                    }
                 }
                 if (areColliding(0, 0, 800, 10, topki[i].x, topki[i].y, 20, 20)) { // proverka gore
                     topki[i].dy = -topki[i].dy;
-                    let audio = hitWallAudio.cloneNode();
-                    audio.play();
-                    audio = null;
+                    if (limit < 10) {
+                        let audio = hitWallAudio.cloneNode();
+                        limit++;
+                        audio.play();
+                        audio = null;
+                        
+                    }
                 }
                 if (topki[i].y >= 580 && topki[i].x != myX) {
                     if (firstBall) {
@@ -92,45 +107,62 @@ function update() {
                         if (blok[j][k] && !disabledCollisions) {
                             if (areColliding(topki[i].x, topki[i].y, 20, 20, (j * 50), k * 50, 50, 5)) { // gore proverka
                                 topki[i].dy = -topki[i].dy;
-                                // blok[j][k] = false;
                                 jiwot[j][k]--;
-                                let audio = hitBlockAudio.cloneNode();
-                                audio.play();
-                                audio = null;
+                                if (limit < 10) {
+                                    let audio = hitWallAudio.cloneNode();
+                                    limit++;
+                                    audio.play();
+                                    audio = null;
+                                    
+                                }
                                 break;
                             }
-                            if (areColliding(topki[i].x, topki[i].y, 20, 20, (j * 50), (k * 50) + 1, 5, 50)) { // lqvo proverka
+                            if (areColliding(topki[i].x, topki[i].y, 20, 20, (j * 50), (k * 50), 5, 50)) { // lqvo proverka
                                 topki[i].dx = -topki[i].dx;
-                                // blok[j][k] = false;
                                 jiwot[j][k]--;
-                                let audio = hitBlockAudio.cloneNode();
-                                audio.play();
-                                audio = null;
+                                if (limit < 10) {
+                                    let audio = hitWallAudio.cloneNode();
+                                    limit++;
+                                    audio.play();
+                                    audio = null;
+                                   
+                                }
                                 break;
                             }
                             if (areColliding(topki[i].x, topki[i].y, 20, 20, (j * 50) + 45, k * 50, 5, 50)) { // dqsno proverka
                                 topki[i].dx = -topki[i].dx;
-                                // blok[j][k] = false;
                                 jiwot[j][k]--;
-                                let audio = hitBlockAudio.cloneNode();
-                                audio.play();
-                                audio = null;
+                                if (limit < 10) {
+                                    let audio = hitWallAudio.cloneNode();
+                                    limit++;
+                                    audio.play();
+                                    audio = null;
+                                    
+                                }
                                 break;
                             }
                             if (areColliding(topki[i].x, topki[i].y, 20, 20, (j * 50), (k * 50) + 45, 50, 5)) { // dole proverka
                                 topki[i].dy = -topki[i].dy;
-                                // blok[j][k] = false;
                                 jiwot[j][k]--;
-                                let audio = hitBlockAudio.cloneNode();
-                                audio.play();
-                                audio = null;
+                                if (limit < 10) {
+                                    let audio = hitWallAudio.cloneNode();
+                                    limit++;
+                                    audio.play();
+                                    audio = null;
+                                    
+                                }
                                 break;
                             }
+
                             if (jiwot[j][k] <= 0) {
                                 blok[j][k] = false;
-                                let audio = blockBreakAudio.cloneNode();
-                                audio.play();
-                                audio = null;
+                                if (limit < 10) {
+                                    let audio = hitWallAudio.cloneNode();
+                                    limit++;
+                                    audio.play();
+                                    audio = null;
+                                    
+                                }
                             }
                         }
                     }
@@ -147,7 +179,7 @@ function update() {
                         if (blok[i][j].length > 12 && blok[i][13]) {
                             zagubi = true;
                         }
-                        if(areColliding(myX, myY, 20, 20, (i * 50), j * 50, 50, 50) && blok[i][j]){
+                        if (areColliding(myX, myY, 20, 20, (i * 50), j * 50, 50, 50) && blok[i][j]) {
                             zagubi = true;
                         }
                         if (blok[i][j]) {
@@ -173,25 +205,51 @@ function update() {
                 }
                 if (giveBalls) {
                     endlessClearAudio.play();
-                    if(gameMode == "story") {
+                    if (gameMode == "story") {
                         brTopki += 25;
                         level++;
                         loadLevel(level);
                     } else {
-                        brTopki += 50;
+                        brTopki += 25;
                     }
-                    // if (timer >= 16) {
-                    //     win = true
-                    // }
                 }
                 timer++;
                 disabledCollisions = false;
             }
         } else {
-            if(topki.length > 0) {
+            if (topki.length > 0) {
                 topki.splice(0, topki.length);
             }
         }
+    }
+    switch (timer) {
+        case 0:
+        case 1:
+        case 2:
+        case 3:
+        case 4:
+            random = 5;
+            break;
+        case 5:
+        case 6:
+        case 7:
+        case 8:
+            random = 10;
+            break;
+        case 9:
+        case 10:
+        case 11:
+        case 12:
+            random = 15;
+            break;
+        case 13:
+        case 14:
+        case 15:
+        case 16:
+            random = 20;
+            break;
+        default:
+            random = 25;
     }
 }
 function draw() {
@@ -199,7 +257,10 @@ function draw() {
         // Tuk naprogramirai kakvo da se risuva
         context.fillStyle = "black";
         context.fillRect(0, 0, 800, 600);
-        // drawImage(backField, 0, 0, 800, 600);
+        if (gameMode === "story") {
+            writeText("35px Tahoma", "black", "Level:" + level, 830, 200);
+            writeText("35px Tahoma", "black", "Time:" + ((currentTime.getTime() - startTime.getTime()) / 1000), 830, 250);
+        }
         drawImage(kufte, myX, myY, 20, 20);
         context.fillStyle = "red";
         context.fillRect(820, 40, 60, 60);
@@ -222,8 +283,10 @@ function draw() {
                     drawImage(box, i * 50, j * 50, 50, 50);
                     writeText("30px Tahoma", "white", jiwot[i][j], i * 50 + 15, j * 50 + 15);
                     // context.fillStyle = "red";
-                    // context.fillRect((i * 50), (j * 50) + 1, 5, 50);
-
+                    // context.fillRect((i * 50) - 2.5, j * 50, 55, 5);
+                    // context.fillRect((i * 50), (j * 50), 5, 50);
+                    // context.fillRect((i * 50) + 45, j * 50, 5, 50);
+                    // context.fillRect((i * 50), (j * 50) + 45, 50, 5);
                 }
             }
         }
@@ -280,11 +343,12 @@ function mouseup() {
             gameStarted = true;
             gameMode = "story";
             musicInGameAudio.play();
+            startTime = new Date();
         } else if (areColliding(300, 300, 200, 50, mouseX, mouseY, 1, 1)) {
             gameStarted = true;
             gameMode = "endless";
-            for(let i = 0; i < 16; i++){
-                for(let j = 0; j < 6; j++){
+            for (let i = 0; i < 16; i++) {
+                for (let j = 0; j < 6; j++) {
                     if (randomInteger(3) !== 2) {
                         blok[i][j] = true;
                         jiwot[i][j] = randomInteger(random) + 1;
@@ -296,9 +360,6 @@ function mouseup() {
             musicInGameAudio.play();
         }
     }
-}
-function mousedown() {
-    // set_d(); 
 }
 function keyup(key) {
 
@@ -319,13 +380,6 @@ function suzdajTopka(x, y, dx, dy, mX, mY) {
             this.y = this.y + this.dy;
         }
     });
-}
-
-function move() {
-    for (let i = 0; i < topki.length; i++) {
-        topki[i].x = topki[i].x + dx * 0.1;
-        topki[i].y = topki[i].y + dy * 0.1;
-    }
 }
 
 function resetBoxes() {
@@ -351,14 +405,14 @@ function writeText(font, style, text, x, y) {
 function downTopki() {
     disabledCollisions = true;
     console.log("downTopki");
-    for(let i = 0; i < shootTimeouts.length; i++){
+    for (let i = 0; i < shootTimeouts.length; i++) {
         clearTimeout(shootTimeouts[i]);
     }
     for (let i = 0; i < topki.length; i++) {
         topki[i].dx = 0;
         topki[i].dy = 0;
         hitWallAudio.volume = 0;
-        setTimeout(() => { topki[i].dx = (myX - topki[i].x) / topki.length;topki[i].dy = (myY - topki[i].y) / topki.length; }, 500);
-        hitWallAudio.volume = 0.5;    
+        setTimeout(() => { topki[i].dx = (myX - topki[i].x) / topki.length; topki[i].dy = (myY - topki[i].y) / topki.length; }, 500);
+        hitWallAudio.volume = 0.5;
     }
 }
