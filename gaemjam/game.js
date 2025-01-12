@@ -53,7 +53,6 @@ function init() {
     loadLevel(level);
 }
 function update() {
-    limit = 0;
     if (!win && !zagubi) {
         currentTime = new Date();
         if (shot) {
@@ -68,7 +67,7 @@ function update() {
                         limit++;
                         audio.play();
                         audio = null;
-                        
+                        setTimeout(() => { limit--; }, 500);
                     }
                 }
                 if (areColliding(0, 0, 800, 10, topki[i].x, topki[i].y, 20, 20)) {
@@ -78,7 +77,7 @@ function update() {
                         limit++;
                         audio.play();
                         audio = null;
-                        
+                        setTimeout(() => { limit--; }, 500);
                     }
                 }
                 if (topki[i].y >= 580 && topki[i].x != myX) {
@@ -108,7 +107,7 @@ function update() {
                                     limit++;
                                     audio.play();
                                     audio = null;
-                                    
+                                    setTimeout(() => { limit--; }, 500);
                                 }
                                 break;
                             }
@@ -120,7 +119,7 @@ function update() {
                                     limit++;
                                     audio.play();
                                     audio = null;
-                                   
+                                    setTimeout(() => { limit--; }, 500);
                                 }
                                 break;
                             }
@@ -132,7 +131,7 @@ function update() {
                                     limit++;
                                     audio.play();
                                     audio = null;
-                                    
+                                    setTimeout(() => { limit--; }, 500);
                                 }
                                 break;
                             }
@@ -144,7 +143,7 @@ function update() {
                                     limit++;
                                     audio.play();
                                     audio = null;
-                                    
+                                    setTimeout(() => { limit--; }, 500);
                                 }
                                 break;
                             }
@@ -156,7 +155,7 @@ function update() {
                                     limit++;
                                     audio.play();
                                     audio = null;
-                                    
+                                    setTimeout(() => { limit--; }, 500);
                                 }
                             }
                         }
@@ -169,6 +168,7 @@ function update() {
                 firstBall = true;
                 let giveBalls = true;
                 shootTimeouts.splice(0, shootTimeouts.length);
+                hitWallAudio.volume = 0.5;
                 for (let i = 0; i < blok.length; i++) {
                     for (let j = 0; j < blok[i].length; j++) {
                         if (blok[i][j].length > 12 && blok[i][13]) {
@@ -400,6 +400,5 @@ function downTopki() {
         topki[i].dy = 0;
         hitWallAudio.volume = 0;
         setTimeout(() => { topki[i].dx = (myX - topki[i].x) / topki.length; topki[i].dy = (myY - topki[i].y) / topki.length; }, 500);
-        hitWallAudio.volume = 0.5;
     }
 }
