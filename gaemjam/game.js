@@ -297,15 +297,15 @@ function draw() {
         context.fillStyle = "white";
         context.fillRect(300, 200, 200, 50);
         context.fillRect(300, 300, 200, 50);
+        context.fillRect(300, 400, 200, 50);
         context.fillStyle = "black";
         writeText("30px Tahoma", "black", "Story Mode", 330, 210);
         writeText("30px Tahoma", "black", "Endless Mode", 315, 310);
+        writeText("30px Tahoma", "black", "Level Editor", 304, 410);
     }
 }
 function mouseup() {
     if (!win && !zagubi && gameStarted) {
-        console.log("Mouse clicked at", mouseX, mouseY);
-        console.log(shot);
         if (!shot && mouseX < 800 && mouseY < 550 && mouseY != 0) {
             let d = dist(myX, myY, mouseX, mouseY);
             let raztoqnieX = mouseX - myX;
@@ -346,12 +346,13 @@ function mouseup() {
                 }
             }
             musicInGameAudio.play();
+        } else if (areColliding(300, 400, 200, 50, mouseX, mouseY, 1, 1)) {
+            window.open("./levelEditor/index.html", "_self");
         }
     }
 }
 function keyup(key) {
 
-    console.log("Pressed", key);
 }
 function dist(x, y, mX, mY) {
     return Math.sqrt((x - mX) * (x - mX) + (y - mY) * (y - mY));
@@ -391,7 +392,6 @@ function writeText(font, style, text, x, y) {
 
 function downTopki() {
     disabledCollisions = true;
-    console.log("downTopki");
     for (let i = 0; i < shootTimeouts.length; i++) {
         clearTimeout(shootTimeouts[i]);
     }
