@@ -1,4 +1,3 @@
-// Suzdavame promenlivi
 let myX, myY;
 let topki = [];
 const kufte = tryToLoad("kufte", "brown");
@@ -41,7 +40,6 @@ window.addEventListener("focus", () => {
 });
 
 function init() {
-    // Kodut tuk se izpulnqva vednuj v nachaloto
     myX = 400;
     myY = 580;
     for (let i = 0; i < 16; i++) {
@@ -55,17 +53,15 @@ function init() {
     loadLevel(level);
 }
 function update() {
-    // Kodut tuk se izpulnqva (okolo) 100 puti v sekunda
     limit = 0;
     if (!win && !zagubi) {
         currentTime = new Date();
         if (shot) {
-            // firstBall = true
 
             for (let i = 0; i < topki.length; i++) {
 
                 topki[i].moveTopka();
-                if (areColliding(-10, 1, 10, 800, topki[i].x, topki[i].y, 20, 20) || areColliding(800, 1, 20, 800, topki[i].x, topki[i].y, 20, 20)) { // proverka lqvo i dqsno
+                if (areColliding(-10, 1, 10, 800, topki[i].x, topki[i].y, 20, 20) || areColliding(800, 1, 20, 800, topki[i].x, topki[i].y, 20, 20)) {
                     topki[i].dx = -topki[i].dx;
                     if (limit < 10) {
                         let audio = hitWallAudio.cloneNode();
@@ -75,7 +71,7 @@ function update() {
                         
                     }
                 }
-                if (areColliding(0, 0, 800, 10, topki[i].x, topki[i].y, 20, 20)) { // proverka gore
+                if (areColliding(0, 0, 800, 10, topki[i].x, topki[i].y, 20, 20)) {
                     topki[i].dy = -topki[i].dy;
                     if (limit < 10) {
                         let audio = hitWallAudio.cloneNode();
@@ -103,9 +99,8 @@ function update() {
                 for (let j = 0; j < blok.length; j++) {
                     for (let k = 0; k < blok[j].length; k++) {
 
-                        //console.log(k * 20);                       
                         if (blok[j][k] && !disabledCollisions) {
-                            if (areColliding(topki[i].x, topki[i].y, 20, 20, (j * 50), k * 50, 50, 5)) { // gore proverka
+                            if (areColliding(topki[i].x, topki[i].y, 20, 20, (j * 50), k * 50, 50, 5)) {
                                 topki[i].dy = -topki[i].dy;
                                 jiwot[j][k]--;
                                 if (limit < 10) {
@@ -117,7 +112,7 @@ function update() {
                                 }
                                 break;
                             }
-                            if (areColliding(topki[i].x, topki[i].y, 20, 20, (j * 50), (k * 50), 5, 50)) { // lqvo proverka
+                            if (areColliding(topki[i].x, topki[i].y, 20, 20, (j * 50), (k * 50), 5, 50)) {
                                 topki[i].dx = -topki[i].dx;
                                 jiwot[j][k]--;
                                 if (limit < 10) {
@@ -129,7 +124,7 @@ function update() {
                                 }
                                 break;
                             }
-                            if (areColliding(topki[i].x, topki[i].y, 20, 20, (j * 50) + 45, k * 50, 5, 50)) { // dqsno proverka
+                            if (areColliding(topki[i].x, topki[i].y, 20, 20, (j * 50) + 45, k * 50, 5, 50)) {
                                 topki[i].dx = -topki[i].dx;
                                 jiwot[j][k]--;
                                 if (limit < 10) {
@@ -141,7 +136,7 @@ function update() {
                                 }
                                 break;
                             }
-                            if (areColliding(topki[i].x, topki[i].y, 20, 20, (j * 50), (k * 50) + 45, 50, 5)) { // dole proverka
+                            if (areColliding(topki[i].x, topki[i].y, 20, 20, (j * 50), (k * 50) + 45, 50, 5)) {
                                 topki[i].dy = -topki[i].dy;
                                 jiwot[j][k]--;
                                 if (limit < 10) {
@@ -254,7 +249,6 @@ function update() {
 }
 function draw() {
     if (!win && !zagubi && gameStarted) {
-        // Tuk naprogramirai kakvo da se risuva
         context.fillStyle = "black";
         context.fillRect(0, 0, 800, 600);
         if (gameMode === "story") {
@@ -282,11 +276,6 @@ function draw() {
                 if (blok[i][j]) {
                     drawImage(box, i * 50, j * 50, 50, 50);
                     writeText("30px Tahoma", "white", jiwot[i][j], i * 50 + 15, j * 50 + 15);
-                    // context.fillStyle = "red";
-                    // context.fillRect((i * 50) - 2.5, j * 50, 55, 5);
-                    // context.fillRect((i * 50), (j * 50), 5, 50);
-                    // context.fillRect((i * 50) + 45, j * 50, 5, 50);
-                    // context.fillRect((i * 50), (j * 50) + 45, 50, 5);
                 }
             }
         }
@@ -315,7 +304,6 @@ function draw() {
 }
 function mouseup() {
     if (!win && !zagubi && gameStarted) {
-        // Pri klik s lqv buton - pokaji koordinatite na mishkata
         console.log("Mouse clicked at", mouseX, mouseY);
         console.log(shot);
         if (!shot && mouseX < 800 && mouseY < 550 && mouseY != 0) {
@@ -363,7 +351,6 @@ function mouseup() {
 }
 function keyup(key) {
 
-    // Pechatai koda na natisnatiq klavish
     console.log("Pressed", key);
 }
 function dist(x, y, mX, mY) {
