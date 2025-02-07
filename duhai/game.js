@@ -24,15 +24,14 @@ let money = 0;      // Normal money earned from normal leaves
 let gold = 0;       // Gold currency earned from gold leaves
 let lastWaveTime = 0;
 let gameStarted = false;
-// We'll no longer use this global variable – use the upgrade's value instead
-// let golfLeafChance = 10; 
 let saveFound = false;
 
-// Define an upgrades object to store upgrade values, limits, and pricing formulas
+// Define an upgrades object to store upgrade values, limits, pricing formulas, and increment values
 const upgrades = {
     normalLeafValue: {
         value: 1,
-        max: 10,
+        max: 20,
+        incr: 1,
         getPrice() {
             return 10 + this.value * 5;
         }
@@ -40,6 +39,7 @@ const upgrades = {
     duhs: {  // Player's push strength (duhane)
         value: 10,
         max: 50,
+        incr: 5,
         getPrice() {
             return 10 + this.value * 5;
         }
@@ -47,6 +47,7 @@ const upgrades = {
     distMax: {
         value: 75,
         max: 200,
+        incr: 10,
         getPrice() {
             return 10 + (this.value - 75) * 2;
         }
@@ -54,21 +55,24 @@ const upgrades = {
     waveInterval: {
         value: 3000, // in milliseconds
         max: 1000,   // lower bound (improvement means lower value)
+        incr: -250,  // subtract 250 per purchase
         getPrice() {
-            return 10 + (3000 - this.value) / 100;
+            return Math.round(10 + (3000 - this.value) / 100);
         }
     },
     leavesPerWave: {
         value: 12,
         max: 50,
+        incr: 2,
         getPrice() {
-            return 10 + (this.value - 12) * 3;
+            return 50 + (this.value - 12) * 3;
         }
     },
     // Upgrade for Gold Leaf Value (increases the yield from gold leaves)
     goldLeafValue: {
         value: 1,
         max: 50,
+        incr: 1,
         getPrice() {
             // Cost is in gold currency.
             return 20 + this.value * 10;
@@ -76,19 +80,15 @@ const upgrades = {
     },
     // New upgrade: Increase the chance for a gold leaf to spawn.
     goldLeafChance: {
-        value: 10, // initial chance is 10%
-        max: 50,   // maximum 50%
+        value: 0, // starting at 0%
+        max: 50,  // maximum 50%
+        incr: 5,
         getPrice() {
-            // Cost is in money (adjust the pricing formula as desired)
-            return 15 + this.value * 2;
+            // Cost is in money (adjust pricing as desired)
+            return 250 + this.value * 5;
         }
     }
 };
-
-// For convenience, mirror some upgrade values into game variables
-let normalLeafValue = upgrades.normalLeafValue.value;
-let waveInterval = upgrades.waveInterval.value;
-let leavesPerWave = upgrades.leavesPerWave.value;
 
 // Classes
 class Igrach {
@@ -98,25 +98,13 @@ class Igrach {
         this.width = width;
         this.height = height;
         this.tool = tool;
-        // These values will be set based on upgrades
-        this.distMax = upgrades.distMax.value;
-        this.duhane = upgrades.duhs.value;
     }
     draw() {
         const angle = Math.atan2(mouseY - this.y, mouseX - this.x);
         context.save();
-        context.translate(
-            this.x + this.width / 2 - 20,
-            this.y + this.height / 2 - 20
-        );
+        context.translate(this.x + this.width / 2 - 20, this.y + this.height / 2 - 20);
         context.rotate(angle);
-        context.drawImage(
-            playerImg,
-            -this.width / 2,
-            -this.height / 2,
-            this.width,
-            this.height
-        );
+        context.drawImage(playerImg, -this.width / 2, -this.height / 2, this.width, this.height);
         context.restore();
     }
 }
@@ -132,18 +120,9 @@ class Listo {
     }
     draw() {
         context.save();
-        context.translate(
-            this.leafX + this.leafWidth / 2,
-            this.leafY + this.leafHeight / 2
-        );
+        context.translate(this.leafX + this.leafWidth / 2, this.leafY + this.leafHeight / 2);
         context.rotate(this.rotation);
-        context.drawImage(
-            leaf[this.type],
-            -this.leafWidth / 2,
-            -this.leafHeight / 2,
-            this.leafWidth,
-            this.leafHeight
-        );
+        context.drawImage(leaf[this.type], -this.leafWidth / 2, -this.leafHeight / 2, this.leafWidth, this.leafHeight);
         context.restore();
     }
     update() {
@@ -153,10 +132,10 @@ class Listo {
         const distance = Math.sqrt(dx * dx + dy * dy);
 
         // If player is close, push leaf in the opposite direction smoothly
-        if (distance < player.distMax) {
+        if (distance < upgrades.distMax.value) {
             const angle = Math.atan2(dy, dx);
-            this.leafX -= Math.cos(angle) * player.duhane;
-            this.leafY -= Math.sin(angle) * player.duhane;
+            this.leafX -= Math.cos(angle) * upgrades.duhs.value;
+            this.leafY -= Math.sin(angle) * upgrades.duhs.value;
             this.rotation += 0.1;
         }
 
@@ -171,7 +150,7 @@ class Listo {
             if (index > -1) {
                 leaves.splice(index, 1);
                 if (this.type === 0) {
-                    money += normalLeafValue;
+                    money += upgrades.normalLeafValue.value;
                 } else if (this.type === 1) {
                     // Gold leaves add to the gold currency using the goldLeafValue upgrade
                     gold += upgrades.goldLeafValue.value;
@@ -204,12 +183,12 @@ function init() {
         Object.assign(upgrades.goldLeafValue, save.upgrades.goldLeafValue);
         Object.assign(upgrades.goldLeafChance, save.upgrades.goldLeafChance);
 
-        // Mirror upgrade values back to our game variables and player stats.
-        normalLeafValue = upgrades.normalLeafValue.value;
-        waveInterval = upgrades.waveInterval.value;
-        leavesPerWave = upgrades.leavesPerWave.value;
-        player.duhane = upgrades.duhs.value;
-        player.distMax = upgrades.distMax.value;
+        // Enforce max values from the code (if saved value exceeds code-defined maximum)
+        for (let key in upgrades) {
+            if (upgrades[key].value > upgrades[key].max) {
+                upgrades[key].value = upgrades[key].max;
+            }
+        }
 
         // Rebuild leaves as instances of Listo
         leaves = save.leaves.map(l => new Listo(l.leafX, l.leafY, l.leafWidth, l.leafHeight, l.type));
@@ -226,9 +205,9 @@ function update() {
 
         // Spawn leaves in waves (limit total leaves to avoid slowdown)
         const currentTime = Date.now();
-        if ((!lastWaveTime || currentTime - lastWaveTime > waveInterval) && leaves.length < 6000) {
+        if ((!lastWaveTime || currentTime - lastWaveTime > upgrades.waveInterval.value) && leaves.length < 6000) {
             lastWaveTime = currentTime;
-            for (let i = 0; i < leavesPerWave; i++) {
+            for (let i = 0; i < upgrades.leavesPerWave.value; i++) {
                 const leafX = Math.random() * canvasWidth;
                 const leafY = Math.random() * canvasHeight;
                 const leafWidth = 50;
@@ -254,22 +233,26 @@ function draw() {
 
         // Display normal money and gold currency with background
         context.fillStyle = "rgba(0, 0, 0, 0.5)";
-        context.fillRect(0, 0, 250, 40);
-        context.fillRect(0, 40, 250, 40);
+        context.fillRect(0, 0, 160, 40);
+        context.fillRect(0, 40, 160, 40);
         context.font = "30px Tahoma";
         context.fillStyle = "white";
-        context.fillText("Money: " + money, 0, 0);
-        context.fillText("Gold: " + gold, 0, 50);
+        context.drawImage(leaf[0], 0, 0, 40, 40);
+        context.fillText(abbrNum(money, 2), 40, 5);
+        context.drawImage(leaf[1], 0, 40, 40, 40);
+        context.fillText(abbrNum(gold, 2), 40, 50);
 
         if (shop) {
-            // Calculate current prices from upgrades
-            const normalLeafValuePrice = upgrades.normalLeafValue.getPrice();
-            const duhnePrice = upgrades.duhs.getPrice();
-            const distMaxPrice = upgrades.distMax.getPrice();
-            const waveIntervalPrice = upgrades.waveInterval.getPrice();
-            const leavesPerWavePrice = upgrades.leavesPerWave.getPrice();
-            const goldLeafValuePrice = upgrades.goldLeafValue.getPrice();
-            const goldLeafChancePrice = upgrades.goldLeafChance.getPrice();
+            // Define an ordered array for the upgrades (for drawing and purchase handling)
+            const upgradeOrder = [
+                { key: "normalLeafValue", label: "Upgrade Normal Leaf Value", icon: leaf[0], costCurrency: "money" },
+                { key: "duhs", label: "Upgrade Duhane", icon: leaf[0], costCurrency: "money" },
+                { key: "distMax", label: "Upgrade DistMax", icon: leaf[0], costCurrency: "money" },
+                { key: "waveInterval", label: "Decrease Wave Interval", icon: leaf[0], costCurrency: "money" },
+                { key: "leavesPerWave", label: "Increase Leaves Per Wave", icon: leaf[0], costCurrency: "money" },
+                { key: "goldLeafChance", label: "Upgrade Gold Leaf Chance", icon: leaf[0], costCurrency: "money" },
+                { key: "goldLeafValue", label: "Upgrade Gold Leaf Value", icon: leaf[1], costCurrency: "gold" }
+            ];
 
             // Draw shop background
             context.fillStyle = "rgba(0, 0, 0, 0.8)";
@@ -286,60 +269,70 @@ function draw() {
             context.fillText("X", canvasWidth - 145, 125);
 
             context.font = "20px Tahoma";
-            // Normal Leaf Value Upgrade (cost: money)
-            context.fillText("Upgrade Normal Leaf Value (Current: " + upgrades.normalLeafValue.value + ")", 150, 190);
-            context.fillText(normalLeafValuePrice, 710, 190);
-            context.drawImage(leaf[0], 745, 180, 30, 30);
-            // Duhane (Push Strength) Upgrade (cost: money)
-            context.fillText("Upgrade Duhane (Current: " + upgrades.duhs.value + ")", 150, 240);
-            context.fillText(duhnePrice, 710, 240);
-            context.drawImage(leaf[0], 745, 230, 30, 30);
-            // DistMax Upgrade (cost: money)
-            context.fillText("Upgrade DistMax (Current: " + upgrades.distMax.value + ")", 150, 290);
-            context.fillText(distMaxPrice, 710, 290);
-            context.drawImage(leaf[0], 745, 280, 30, 30);
-            // Wave Interval Upgrade (Lower is better; cost: money)
-            context.fillText("Decrease Wave Interval (Current: " + waveInterval + "ms)", 150, 340);
-            context.fillText(waveIntervalPrice, 710, 340);
-            context.drawImage(leaf[0], 745, 330, 30, 30);
-            // Leaves Per Wave Upgrade (cost: money)
-            context.fillText("Increase Leaves Per Wave (Current: " + upgrades.leavesPerWave.value + ")", 150, 390);
-            context.fillText(leavesPerWavePrice, 710, 390);
-            context.drawImage(leaf[0], 745, 380, 30, 30);
-            // Gold Leaf Value Upgrade (cost: gold)
-            context.fillText("Upgrade Gold Leaf Value (Current: " + upgrades.goldLeafValue.value + ")", 150, 440);
-            context.fillText(goldLeafValuePrice, 710, 440);
-            context.drawImage(leaf[1], 745, 430, 30, 30);
-            // New Upgrade: Gold Leaf Chance (cost: money)
-            context.fillText("Upgrade Gold Leaf Chance (Current: " + upgrades.goldLeafChance.value + "%)", 150, 490);
-            context.fillText(goldLeafChancePrice, 710, 490);
-            context.drawImage(leaf[1], 745, 480, 30, 30);
 
-            // Draw Buy buttons for each upgrade option with max check
-            // Helper function to draw a buy button
-            function drawBuyButton(x, y, upgradeObj) {
-                // If the upgrade is maxed out, draw red and display "Max"
-                if (upgradeObj.value >= upgradeObj.max) {
-                    context.fillStyle = "red";
-                    context.fillRect(x, y, 100, 30);
-                    context.fillStyle = "white";
-                    context.fillText("Max", x + 30, y + 5);
-                } else {
-                    context.fillStyle = "green";
-                    context.fillRect(x, y, 100, 30);
-                    context.fillStyle = "white";
-                    context.fillText("Buy", x + 30, y + 5);
+            // Fixed positioning for each upgrade item
+            let baseY = 190;
+            const xText = 150;      // Where the upgrade label is drawn
+            const xPrice = 710;     // Where the price is drawn
+            const xIcon = 745;      // Where the icon is drawn
+            const xButton = 600;    // Where the buy button is drawn
+            const buttonWidth = 100, buttonHeight = 30;
+            for (let i = 0; i < upgradeOrder.length; i++) {
+                const upgradeKey = upgradeOrder[i].key;
+                const upgradeObj = upgrades[upgradeKey];
+                const label = upgradeOrder[i].label;
+                const icon = upgradeOrder[i].icon;
+                const costCurrency = upgradeOrder[i].costCurrency;
+                const price = upgradeObj.getPrice();
+                let displayText = `${label} (Current: ${upgradeObj.value}`;
+                if (upgradeKey === "waveInterval") {
+                    displayText += "ms";
                 }
+                displayText += ")";
+
+                // Draw the upgrade label and price
+                context.fillStyle = "white";
+                context.fillText(displayText, xText, baseY);
+                context.fillText(price, xPrice, baseY);
+
+                // Draw the upgrade icon
+                context.drawImage(icon, xIcon, baseY - 10, 30, 30);
+
+                // Draw the buy button using the helper function
+                drawBuyButton(xButton, baseY - 15, upgradeObj, costCurrency, buttonWidth, buttonHeight);
+
+                baseY += 50;
             }
 
-            // Draw each button with the proper position and upgrade object
-            drawBuyButton(600, 180, upgrades.normalLeafValue);
-            drawBuyButton(600, 230, upgrades.duhs);
-            drawBuyButton(600, 280, upgrades.distMax);
-            drawBuyButton(600, 330, upgrades.waveInterval);
-            drawBuyButton(600, 380, upgrades.leavesPerWave);
-            drawBuyButton(600, 430, upgrades.goldLeafValue);
-            drawBuyButton(600, 480, upgrades.goldLeafChance);
+            // Helper function to draw a buy button.
+            // It uses the upgrade object, costCurrency string, and button dimensions.
+            function drawBuyButton(x, y, upgradeObj, costCurrency, buttonWidth, buttonHeight) {
+                if (upgradeObj.incr > 0) {
+                    if (upgradeObj.value >= upgradeObj.max) {
+                        context.fillStyle = "red";
+                        context.fillRect(x, y + 10, buttonWidth, buttonHeight);
+                        context.fillStyle = "white";
+                        context.fillText("Max", x + 30, y + 20);
+                    } else {
+                        context.fillStyle = "green";
+                        context.fillRect(x, y + 10, buttonWidth, buttonHeight);
+                        context.fillStyle = "white";
+                        context.fillText("Buy", x + 30, y + 20);
+                    }
+                } else {
+                    if (upgradeObj.value <= upgradeObj.max) {
+                        context.fillStyle = "red";
+                        context.fillRect(x, y + 10, buttonWidth, buttonHeight);
+                        context.fillStyle = "white";
+                        context.fillText("Max", x + 30, y + 20);
+                    } else {
+                        context.fillStyle = "green";
+                        context.fillRect(x, y + 10, buttonWidth, buttonHeight);
+                        context.fillStyle = "white";
+                        context.fillText("Buy", x + 30, y + 20);
+                    }
+                }
+            }
         } else {
             // Draw shop button (leaf image background)
             context.fillStyle = "rgba(0, 0, 0, 0.5)";
@@ -378,7 +371,6 @@ function draw() {
 }
 
 function mouseup() {
-    // Log mouse coordinates on click
     console.log("Mouse clicked at", mouseX, mouseY);
     if (gameStarted) {
         if (!shop) {
@@ -387,92 +379,72 @@ function mouseup() {
             }
             if (areColliding(mouseX, mouseY, 1, 1, canvasWidth - 70, 0, 70, 70)) {
                 let time = Date.now();
-                // Prepare save data including upgrades and gold
                 let save = {
                     leaves, // (We rebuild these on load)
                     money,
                     gold,
-                    upgrades, // Save our upgrades object
+                    upgrades,
                     waveInterval,
                     leavesPerWave,
                     time
                 };
                 save = btoa(JSON.stringify(save));
                 localStorage.setItem("LeafBlower-save", save);
-
                 alert("Game saved at " + new Date(time).toLocaleString());
             }
         } else {
-            // In shop mode
             if (areColliding(mouseX, mouseY, 1, 1, canvasWidth - 150, 120, 30, 30)) {
                 shop = false;
             }
 
-            // Check upgrade buttons and apply upgrades if the player has enough currency
-            // Upgrade Normal Leaf Value (cost: money)
-            if (areColliding(mouseX, mouseY, 1, 1, 600, 180, 100, 30)) {
-                const price = upgrades.normalLeafValue.getPrice();
-                if (money >= price && upgrades.normalLeafValue.value < upgrades.normalLeafValue.max) {
-                    upgrades.normalLeafValue.value++;
-                    money -= price;
-                    normalLeafValue = upgrades.normalLeafValue.value;
+            // Use the same upgradeOrder array to handle purchases.
+            const upgradeOrder = [
+                "normalLeafValue",
+                "duhs",
+                "distMax",
+                "waveInterval",
+                "leavesPerWave",
+                "goldLeafChance",
+                "goldLeafValue"
+            ];
+            let baseY = 190;
+            for (let i = 0; i < upgradeOrder.length; i++) {
+                const key = upgradeOrder[i];
+                const upgradeObj = upgrades[key];
+                // Button area: x = 600, y = baseY - 15, width = 100, height = 30.
+                if (areColliding(mouseX, mouseY, 1, 1, 600, baseY - 15, 100, 30)) {
+                    let price = upgradeObj.getPrice();
+                    let currency = "money";
+                    if (key === "goldLeafValue") {
+                        currency = "gold";
+                    }
+                    // Check if the upgrade is not 
+                    if (upgradeObj.incr > 0) {
+                        if (upgradeObj.value < upgradeObj.max) {
+                            if (currency === "money" && money >= price) {
+                                upgradeObj.value += upgradeObj.incr;
+                                money -= price;
+                            } else if (currency === "gold" && gold >= price) {
+                                upgradeObj.value += upgradeObj.incr;
+                                gold -= price;
+                            }
+                        }
+                    } else {
+                        if (upgradeObj.value > upgradeObj.max) {
+                            if (currency === "money" && money >= price) {
+                                upgradeObj.value += upgradeObj.incr;
+                                money -= price;
+                            } else if (currency === "gold" && gold >= price) {
+                                upgradeObj.value += upgradeObj.incr;
+                                gold -= price;
+                            }
+                        }
+                    }
                 }
-            }
-            // Upgrade Duhane (Push Strength, cost: money)
-            if (areColliding(mouseX, mouseY, 1, 1, 600, 230, 100, 30)) {
-                const price = upgrades.duhs.getPrice();
-                if (money >= price && upgrades.duhs.value < upgrades.duhs.max) {
-                    upgrades.duhs.value += 5;
-                    money -= price;
-                    player.duhane = upgrades.duhs.value;
-                }
-            }
-            // Upgrade DistMax (cost: money)
-            if (areColliding(mouseX, mouseY, 1, 1, 600, 280, 100, 30)) {
-                const price = upgrades.distMax.getPrice();
-                if (money >= price && upgrades.distMax.value < upgrades.distMax.max) {
-                    upgrades.distMax.value += 10;
-                    money -= price;
-                    player.distMax = upgrades.distMax.value;
-                }
-            }
-            // Decrease Wave Interval (improvement; cost: money)
-            if (areColliding(mouseX, mouseY, 1, 1, 600, 330, 100, 30)) {
-                const price = upgrades.waveInterval.getPrice();
-                if (money >= price && upgrades.waveInterval.value > upgrades.waveInterval.max) {
-                    upgrades.waveInterval.value = Math.max(upgrades.waveInterval.max, upgrades.waveInterval.value - 500);
-                    money -= price;
-                    waveInterval = upgrades.waveInterval.value;
-                }
-            }
-            // Increase Leaves Per Wave (cost: money)
-            if (areColliding(mouseX, mouseY, 1, 1, 600, 380, 100, 30)) {
-                const price = upgrades.leavesPerWave.getPrice();
-                if (money >= price && upgrades.leavesPerWave.value < upgrades.leavesPerWave.max) {
-                    upgrades.leavesPerWave.value += 2;
-                    money -= price;
-                    leavesPerWave = upgrades.leavesPerWave.value;
-                }
-            }
-            // Upgrade Gold Leaf Value (cost: gold)
-            if (areColliding(mouseX, mouseY, 1, 1, 600, 430, 100, 30)) {
-                const price = upgrades.goldLeafValue.getPrice();
-                if (gold >= price && upgrades.goldLeafValue.value < upgrades.goldLeafValue.max) {
-                    upgrades.goldLeafValue.value++;
-                    gold -= price;
-                }
-            }
-            // New: Upgrade Gold Leaf Chance (cost: gold)
-            if (areColliding(mouseX, mouseY, 1, 1, 600, 480, 100, 30)) {
-                const price = upgrades.goldLeafChance.getPrice();
-                if (gold >= price && upgrades.goldLeafChance.value < upgrades.goldLeafChance.max) {
-                    upgrades.goldLeafChance.value++;
-                    gold -= price;
-                }
+                baseY += 50;
             }
         }
     } else {
-        // On the start screen
         if (areColliding(mouseX, mouseY, 1, 1, canvasWidth / 2 - 100, canvasHeight / 2 - 25, 200, 50)) {
             gameStarted = true;
             window.onbeforeunload = function () {
@@ -503,11 +475,22 @@ function mouseup() {
 }
 
 function keyup(key) {
-    // Log key pressed
     console.log("Pressed", key);
     if (gameStarted) {
         if (key == 66) { // Toggle shop when 'B' is pressed (keycode 66)
             shop = !shop;
         }
     }
+}
+
+function abbrNum(n, d) {
+    const units = ['k', 'm', 'b', 't'], factor = 10 ** d;
+    for (let i = units.length - 1, s; i >= 0; i--) {
+        if ((s = 10 ** ((i + 1) * 3)) <= n) {
+            n = Math.round(n * factor / s) / factor;
+            if (n === 1000 && i < units.length - 1) { n = 1; i++; }
+            return n + units[i];
+        }
+    }
+    return n;
 }
