@@ -384,7 +384,7 @@ function mouseup() {
                     money,
                     gold,
                     upgrades,
-                    waveInterval,
+                    //waveInterval,
                     leavesPerWave,
                     time
                 };
@@ -453,7 +453,7 @@ function mouseup() {
                     money,
                     gold,
                     upgrades,
-                    waveInterval,
+                    //waveInterval,
                     leavesPerWave
                 };
                 const savedData = JSON.parse(atob(localStorage.getItem("LeafBlower-save")));
