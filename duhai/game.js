@@ -307,31 +307,43 @@ function draw() {
             // Helper function to draw a buy button.
             // It uses the upgrade object, costCurrency string, and button dimensions.
             function drawBuyButton(x, y, upgradeObj, costCurrency, buttonWidth, buttonHeight) {
-                if (upgradeObj.incr > 0) {
-                    if (upgradeObj.value >= upgradeObj.max) {
-                        context.fillStyle = "red";
-                        context.fillRect(x, y + 10, buttonWidth, buttonHeight);
-                        context.fillStyle = "white";
-                        context.fillText("Max", x + 30, y + 20);
-                    } else {
-                        context.fillStyle = "green";
-                        context.fillRect(x, y + 10, buttonWidth, buttonHeight);
-                        context.fillStyle = "white";
-                        context.fillText("Buy", x + 30, y + 20);
-                    }
-                } else {
-                    if (upgradeObj.value <= upgradeObj.max) {
-                        context.fillStyle = "red";
-                        context.fillRect(x, y + 10, buttonWidth, buttonHeight);
-                        context.fillStyle = "white";
-                        context.fillText("Max", x + 30, y + 20);
-                    } else {
-                        context.fillStyle = "green";
-                        context.fillRect(x, y + 10, buttonWidth, buttonHeight);
-                        context.fillStyle = "white";
-                        context.fillText("Buy", x + 30, y + 20);
-                    }
+                let poor = false;
+                if ((costCurrency === "money" && money < upgradeObj.getPrice()) || (costCurrency === "gold" && gold < upgradeObj.getPrice())) {
+                    poor = true
                 }
+                    if (upgradeObj.incr > 0) {
+                        if (upgradeObj.value >= upgradeObj.max) {
+                            context.fillStyle = "red";
+                            context.fillRect(x, y + 10, buttonWidth, buttonHeight);
+                            context.fillStyle = "white";
+                            context.fillText("Max", x + 30, y + 20);
+                        } else {
+                            context.fillStyle = "green";
+                            context.fillRect(x, y + 10, buttonWidth, buttonHeight);
+                            context.fillStyle = "white";
+                            context.fillText("Buy", x + 30, y + 20);
+                            if(poor) {
+                                context.fillStyle = "rgba(0, 0, 0, 0.5)";
+                                context.fillRect(x, y + 10, buttonWidth, buttonHeight);
+                            }
+                        }
+                    } else {
+                        if (upgradeObj.value <= upgradeObj.max) {
+                            context.fillStyle = "red";
+                            context.fillRect(x, y + 10, buttonWidth, buttonHeight);
+                            context.fillStyle = "white";
+                            context.fillText("Max", x + 30, y + 20);
+                        } else {
+                            context.fillStyle = "green";
+                            context.fillRect(x, y + 10, buttonWidth, buttonHeight);
+                            context.fillStyle = "white";
+                            context.fillText("Buy", x + 30, y + 20);
+                            if(poor) {
+                                context.fillStyle = "rgba(0, 0, 0, 0.5)";
+                                context.fillRect(x, y + 10, buttonWidth, buttonHeight);
+                            }
+                        }
+                    }
             }
         } else {
             // Draw shop button (leaf image background)
@@ -384,8 +396,6 @@ function mouseup() {
                     money,
                     gold,
                     upgrades,
-                    waveInterval,
-                    leavesPerWave,
                     time
                 };
                 save = btoa(JSON.stringify(save));
@@ -448,19 +458,7 @@ function mouseup() {
         if (areColliding(mouseX, mouseY, 1, 1, canvasWidth / 2 - 100, canvasHeight / 2 - 25, 200, 50)) {
             gameStarted = true;
             window.onbeforeunload = function () {
-                const currentSave = {
-                    leaves,
-                    money,
-                    gold,
-                    upgrades,
-                    waveInterval,
-                    leavesPerWave
-                };
-                const savedData = JSON.parse(atob(localStorage.getItem("LeafBlower-save")));
-                if (JSON.stringify(currentSave) !== JSON.stringify(savedData)) {
-                    return true;
-                }
-                return null;
+                return true;
             }
         }
         if (areColliding(mouseX, mouseY, 1, 1, canvasWidth / 2 - 100, canvasHeight / 2 + 125, 200, 50)) {
