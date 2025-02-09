@@ -53,8 +53,6 @@ class Enemy {
             if (segment instanceof CircleSegment) {
                 if(Math.abs(this.x - segment.endX) < 2 && Math.abs(this.y - segment.endY) < 2) {
                     this.currentSegmentIndex++;
-                } else {
-                    
                 }
             } else if (segment instanceof Segment) {
                 let targetX = segment.endX;
