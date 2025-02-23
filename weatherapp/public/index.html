@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="container">
+        <h1>Ni- Weather Dashboard</h1>
+
+        <div class="controls">
+            <form id="cityForm">
+                <div>
+                    <input type="text" id="cityInput" placeholder="Enter City Name" name="city"></input>
+                    <button type="submit">Get Cities</button>
+                </div>
+                <label for="cityForm">Select City:</label>
+                <select id="citySelect" name="city" id="city">
+                    <option value="">Select a city</option>
+                </select>
+            </form>
+
+            <div class="time-control">
+                <label for="timeSlider">Hour: <span id="timeValue">12</span>:00</label>
+                <input type="range" id="timeSlider" min="0" max="23" value="12">
+            </div>
+        </div>
+
+        <div class="weather-card">
+            <h2 id="cityName">-</h2>
+            <div class="weather-info">
+                <div class="temperature" id="temperature">-°C</div>
+                <div class="details">
+                    <div>Humidity: <span id="humidity">-%</span></div>
+                    <div>Wind: <span id="wind">- km/h</span></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="visualization">
+            <h3>24-Hour Temperature Forecast</h3>
+            <canvas id="tempChart" width="800" height="200"></canvas>
+            <div class="time-markers">
+                <span>00:00</span>
+                <span>06:00</span>
+                <span>12:00</span>
+                <span>18:00</span>
+                <span>23:00</span>
+            </div>
+        </div>
+    </div>
+    <script src="app.js"></script>
+</body>
+
+</html>

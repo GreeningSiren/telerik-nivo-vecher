@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather App</title>
+</head>
+<body>
+    <h1>Weather App</h1>
+    <form id="weather-form">
+        <label for="city-search">Search City:</label>
+        <input type="text" id="city-search" name="city-search" placeholder="Enter city name">
+        <button type="button" id="search-button">Search</button>
+        <br>
+        <label for="city">Select City:</label>
+        <select id="city" name="city">
+            <option value="">Select a city</option>
+        </select>
+        <button type="submit">Get Weather</button>
+    </form>
+    <div id="weather-result"></div>
+    <div id="city-message"></div>
+
+    <script>
+        document.getElementById('search-button').addEventListener('click', function() {
+            const citySearch = document.getElementById('city-search').value;
+            if (citySearch) {
+                fetchCities(citySearch);
+            } else {
+                alert('Please enter a city name to search');
+            }
+        });
+
+        document.getElementById('city-search').addEventListener('keydown', function(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                document.getElementById('search-button').click();
+            }
+        });
+
+        document.getElementById('weather-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const citySelect = document.getElementById('city');
+            const selectedOption = citySelect.options[citySelect.selectedIndex];
+            if (selectedOption.value) {
+                const latitude = selectedOption.getAttribute('data-latitude');
+                const longitude = selectedOption.getAttribute('data-longitude');
+                getWeather(latitude, longitude);
+            } else {
+                alert('Please select a city');
+            }
+        });
+
+        async function fetchCities(citySearch) {
+            try {
+                const response = await fetch(`/getcities?city=${citySearch}`);
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                const data = await response.json();
+                if (data.results && data.results.length > 0) {
+                    populateCityDropdown(data.results);
+                } else {
+                    populateCityDropdown([]);
+                }
+            } catch (error) {
+                console.error('There has been a problem with your fetch operation:', error);
+            }
+        }
+
+        function populateCityDropdown(cities) {
+            const cityDropdown = document.getElementById('city');
+            const cityMessage = document.getElementById('city-message');
+            cityDropdown.innerHTML = '<option value="">Select a city</option>'; // Clear previous options
+            if (cities.length === 0) {
+                cityMessage.textContent = 'No cities found. Please try a different search.';
+            } else {
+                cityMessage.textContent = '';
+                cities.forEach(city => {
+                    const option = document.createElement('option');
+                    option.value = city.name;
+                    option.setAttribute('data-latitude', city.latitude);
+                    option.setAttribute('data-longitude', city.longitude);
+                    option.textContent = `${city.name}, ${city.country} (${city.latitude}, ${city.longitude})`;
+                    cityDropdown.appendChild(option);
+                });
+            }
+        }
+
+        async function getWeather(latitude, longitude) {
+            try {
+                const response = await fetch(`/weather?latitude=${latitude}&longitude=${longitude}`);
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                const weatherData = await response.json();
+                displayWeather(weatherData);
+            } catch (error) {
+                console.error('There has been a problem with your fetch operation:', error);
+            }
+        }
+
+        function displayWeather(weatherData) {
+            const weatherResult = document.getElementById('weather-result');
+            const currentWeather = weatherData.current_weather;
+            weatherResult.innerHTML = `
+                <h2>Weather in ${city.value}</h2>
+                <p>Temperature: ${currentWeather.temperature}°C</p>
+                <p>Condition: ${currentWeather.weathercode}</p>
+                <p>Wind Speed: ${currentWeather.windspeed} km/h</p>
+                <p>Wind Direction: ${currentWeather.winddirection}°</p>
+                <p>Time: ${new Date(currentWeather.time).toLocaleString()}</p>
+            `;
+        }
+    </script>
+</body>
+</html>
